@@ -113,19 +113,50 @@
       <a href="mailto:hello@paperplane.live">Contact</a>
     </div>
   </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://dxzmqcrhckccgwjhdoiw.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2wVe0c6Go76niXv9JEjwBQ_f9e6v6_a';
 
-  <script>
-    function handleSubmit(event) {
-      event.preventDefault();
-      const form = event.target;
-      const data = Object.fromEntries(new FormData(form).entries());
-      const key = 'paperplane_beta_requests';
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      existing.push({ ...data, submittedAt: new Date().toISOString() });
-      localStorage.setItem(key, JSON.stringify(existing));
-      form.reset();
-      document.getElementById('form-message').textContent = 'Saved on this device for demo testing. Replace this with Supabase before public launch.';
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const messageEl = document.getElementById('form-message');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    const formData = new FormData(form);
+    const name = String(formData.get('name') || '').trim();
+    const email = String(formData.get('email') || '').trim();
+    const role = String(formData.get('role') || '').trim();
+
+    messageEl.textContent = '';
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
+
+    const { error } = await supabaseClient
+      .from('beta_signups')
+      .insert([{ name, email, role }]);
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      messageEl.textContent = 'Something went wrong. Please try again.';
+      submitButton.disabled = false;
+      submitButton.textContent = 'Request beta access';
+      return;
     }
-  </script>
+
+    form.reset();
+    messageEl.textContent = 'You are on the beta list. We will reach out soon.';
+    submitButton.disabled = false;
+    submitButton.textContent = 'Request beta access';
+  }
+</script>
+
 </body>
 </html>
