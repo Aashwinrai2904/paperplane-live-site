@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PaperPlane — Send a package</title>
+  <meta name="description" content="Create a package request on PaperPlane." />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="brand"><a href="/" style="color: inherit; text-decoration: none;">PaperPlane</a></div>
+    <nav>
+      <a href="/#how">How it works</a>
+      <a href="/#beta">Join beta</a>
+      <a href="/track/">Track package</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="section" style="max-width: 900px; margin: 0 auto;">
+      <h1>Send a package</h1>
+      <p class="section-copy">
+        Tell us where your package needs to go, and we’ll match it with a traveler already headed that way.
+      </p>
+
+      <form class="beta-form" id="sender-request-form" onsubmit="handleSenderSubmit(event)">
+        <input type="text" name="sender_name" placeholder="Your name" required />
+        <input type="email" name="sender_email" placeholder="Email address" required />
+        <input type="text" name="pickup_location" placeholder="Pickup location" required />
+        <input type="text" name="dropoff_location" placeholder="Dropoff location" required />
+
+        <select name="package_size" required>
+          <option value="">Select package size</option>
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
+        </select>
+
+        <input type="text" name="package_description" placeholder="Package description (optional)" />
+        <input type="datetime-local" name="earliest_pickup_at" />
+        <input type="datetime-local" name="latest_dropoff_at" />
+
+        <button class="button primary" type="submit">Submit request</button>
+      </form>
+
+      <p id="sender-form-message" class="form-message"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© 2026 PaperPlane</div>
+    <div class="footer-links">
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="mailto:hello@paperplane.live">Contact</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://dxzmqcrhckccgwjhdoiw.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2wVe0c6Go76niXv9JEjwBQ_f9e6v6_a';
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    async function handleSenderSubmit(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const messageEl = document.getElementById('sender-form-message');
+      const submitButton = form.querySelector('button[type="submit"]');
+
+      const formData = new FormData(form);
+
+      const payload = {
+        sender_name: String(formData.get('sender_name') || '').trim(),
+        sender_email: String(formData.get('sender_email') || '').trim(),
+        pickup_location: String(formData.get('pickup_location') || '').trim(),
+        dropoff_location: String(formData.get('dropoff_location') || '').trim(),
+        package_size: String(formData.get('package_size') || '').trim(),
+        package_description: String(formData.get('package_description') || '').trim() || null,
+        earliest_pickup_at: formData.get('earliest_pickup_at') || null,
+        latest_dropoff_at: formData.get('latest_dropoff_at') || null
+      };
+
+      messageEl.textContent = '';
+      submitButton.disabled = true;
+      submitButton.textContent = 'Submitting...';
+
+      const { error } = await supabaseClient
+        .from('sender_requests')
+        .insert([payload]);
+
+      if (error) {
+        console.error('Supabase insert error:', error);
+        messageEl.textContent = 'Something went wrong. Please try again.';
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit request';
+        return;
+      }
+
+      form.reset();
+      messageEl.textContent = 'Your package request has been submitted.';
+      submitButton.disabled = false;
+      submitButton.textContent = 'Submit request';
+    }
+  </script>
+</body>
+</html>
