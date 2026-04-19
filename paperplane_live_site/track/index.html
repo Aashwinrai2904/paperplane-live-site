@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track package — PaperPlane</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="brand">PaperPlane</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+    </nav>
+  </header>
+
+  <main class="track-wrap">
+    <section class="track-card">
+      <span class="pill">Tracking demo</span>
+      <h1>Package status</h1>
+      <p class="lede small">This is a front-end demo page so you can test a real route on your domain before the live backend is connected.</p>
+
+      <div class="status-block current">
+        <div class="status-title">En route to Burnaby</div>
+        <div class="status-meta">Courier: A. Singh · ETA: 18 min</div>
+      </div>
+
+      <ol class="timeline">
+        <li class="done"><strong>Request matched</strong><span>Courier already traveling in your direction accepted the package.</span></li>
+        <li class="done"><strong>Pickup verified</strong><span>Sender handoff confirmed with QR / passcode.</span></li>
+        <li class="active"><strong>In transit</strong><span>Package is currently moving toward dropoff.</span></li>
+        <li><strong>Arriving soon</strong><span>Recipient verification will be required.</span></li>
+        <li><strong>Delivered</strong><span>Proof of delivery appears here.</span></li>
+      </ol>
+
+      <div class="demo-box">
+        <label for="code">Demo verification code</label>
+        <input id="code" placeholder="Enter 4-digit code" maxlength="6" />
+        <button class="button primary" onclick="verifyCode()">Verify</button>
+        <p id="verify-message" class="form-message"></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function verifyCode() {
+      const value = document.getElementById('code').value.trim();
+      const msg = document.getElementById('verify-message');
+      if (value === '2424') {
+        msg.textContent = 'Demo verified successfully.';
+      } else {
+        msg.textContent = 'Demo only: use 2424.';
+      }
+    }
+  </script>
+</body>
+</html>

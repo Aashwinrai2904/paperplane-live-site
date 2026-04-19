@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PaperPlane — Send packages with people already going your way</title>
+  <meta name="description" content="PaperPlane matches senders with verified travelers already headed in the same direction, making package delivery cheaper, smarter, and lower-waste." />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="brand">PaperPlane</div>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#beta">Join beta</a>
+      <a href="/track/">Track package</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="pill">Vancouver ↔ Burnaby beta</span>
+        <h1>Send packages with people already going your way.</h1>
+        <p class="lede">
+          PaperPlane matches package requests with verified travelers already headed in the same direction.
+          Less waste. Lower cost. Faster than waiting around.
+        </p>
+        <div class="cta-row">
+          <a class="button primary" href="#beta">Join the beta</a>
+          <a class="button secondary" href="/track/">Open tracking demo</a>
+        </div>
+        <ul class="hero-points">
+          <li>Route-matched couriers</li>
+          <li>Pickup and dropoff verification</li>
+          <li>Built for small parcels first</li>
+        </ul>
+      </div>
+      <div class="phone-card">
+        <div class="mini-card">
+          <div class="mini-label">Live match</div>
+          <div class="mini-title">Courier already headed to Burnaby</div>
+          <div class="mini-meta">Pickup detour: 3 min · Earn: $12</div>
+        </div>
+        <div class="route-line"></div>
+        <div class="mini-card muted">
+          <div class="mini-label">Verified handoff</div>
+          <div class="mini-title">QR or 4-digit code at pickup and delivery</div>
+          <div class="mini-meta">Safer than casual dropoffs</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <h2>How it works</h2>
+      <div class="grid three">
+        <article class="card">
+          <span class="step">1</span>
+          <h3>Courier posts a route</h3>
+          <p>Someone already traveling enters where they are going, when they’re leaving, and how much detour they allow.</p>
+        </article>
+        <article class="card">
+          <span class="step">2</span>
+          <h3>Sender creates a request</h3>
+          <p>The sender adds pickup, dropoff, package size, and timing. PaperPlane looks for compatible routes.</p>
+        </article>
+        <article class="card">
+          <span class="step">3</span>
+          <h3>Secure handoff</h3>
+          <p>Pickup and delivery use a QR or passcode verification flow, plus live tracking and status updates.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <h2>Why this is different</h2>
+      <div class="grid two">
+        <article class="card">
+          <h3>Not a normal courier app</h3>
+          <p>Traditional apps dispatch someone mainly for the delivery. PaperPlane layers a package onto movement that was already happening.</p>
+        </article>
+        <article class="card">
+          <h3>Better economics</h3>
+          <p>That means lower delivery cost for senders, small earnings for travelers, and fewer unnecessary trips on the road.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="beta">
+      <h2>Join the beta</h2>
+      <p class="section-copy">This beta landing page is the fastest way to get PaperPlane live on your domain while the full app is being wired up.</p>
+      <form class="beta-form" onsubmit="handleSubmit(event)">
+        <input type="text" name="name" placeholder="Your name" required />
+        <input type="email" name="email" placeholder="Email address" required />
+        <select name="role" required>
+          <option value="">I want to join as…</option>
+          <option>Sender</option>
+          <option>Courier</option>
+          <option>Both</option>
+          <option>Just curious</option>
+        </select>
+        <button class="button primary" type="submit">Request beta access</button>
+      </form>
+      <p id="form-message" class="form-message"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© 2026 PaperPlane</div>
+    <div class="footer-links">
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="mailto:hello@paperplane.live">Contact</a>
+    </div>
+  </footer>
+
+  <script>
+    function handleSubmit(event) {
+      event.preventDefault();
+      const form = event.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const key = 'paperplane_beta_requests';
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      existing.push({ ...data, submittedAt: new Date().toISOString() });
+      localStorage.setItem(key, JSON.stringify(existing));
+      form.reset();
+      document.getElementById('form-message').textContent = 'Saved on this device for demo testing. Replace this with Supabase before public launch.';
+    }
+  </script>
+</body>
+</html>
