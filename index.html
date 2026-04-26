@@ -1039,8 +1039,8 @@ const CHAT=[
    AUTH FUNCTIONS — Supabase production-ready foundation
 ════════════════════════════════════════ */
 const SUPABASE_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KOrWiAkFzImf1vjI3qlrw_XTizStnj';
-const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const SUPABASE_ANON_KEY = 'sb_publishable_KOrWiAkFzImf1vjI3qlrw_XTizStnj';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let authMode = 'in';
 
 function switchAuthTab(tab){
