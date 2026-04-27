@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Couride — Smoke Test Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @media (prefers-color-scheme: light) { html, body { background: #0d0f1a !important; color: #f0f0f0 !important; } }
+  :root {
+    --bg: #0a0c17;
+    --surface: #0d0f1a;
+    --surface2: #0f1120;
+    --border: #1f2440;
+    --accent-s: #E8FF47;
+    --accent-d: #FF6B35;
+    --accent-p: #7B61FF;
+    --text: #e8e8e8;
+    --muted: #555;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-weight: 300; min-height: 100vh; }
+
+  /* LOGIN */
+  .login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .login-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; color: var(--accent-s); margin-bottom: 0.3rem; }
+  .login-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 2rem; }
+  .login-box input {
+    width: 100%; background: #0d0f1a; border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--font-body);
+    font-size: 0.95rem; padding: 0.75rem 1rem; outline: none; margin-bottom: 0.75rem;
+  }
+  .login-box input:focus { border-color: rgba(232,255,71,0.4); }
+  .login-btn {
+    width: 100%; background: var(--accent-s); color: #0a0c17;
+    border: none; border-radius: 8px; font-family: var(--font-display);
+    font-weight: 700; font-size: 0.95rem; padding: 0.8rem; cursor: pointer;
+  }
+  .login-btn:hover { opacity: 0.9; }
+  .login-err { color: #f87171; font-size: 0.8rem; margin-top: 0.75rem; }
+
+  /* DASHBOARD */
+  .dashboard { display: none; }
+  header {
+    position: sticky; top: 0; z-index: 50;
+    padding: 1rem 2rem;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(8,8,8,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+  .header-logo span { color: var(--accent-s); }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .last-refresh { font-size: 0.72rem; font-family: var(--font-mono); color: var(--muted); }
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 0.78rem; padding: 0.4rem 0.9rem;
+    border-radius: 6px; cursor: pointer; font-family: var(--font-body);
+  }
+  .refresh-btn:hover { border-color: #444; }
+  .logout-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); font-size: 0.75rem; padding: 0.35rem 0.75rem;
+    border-radius: 6px; cursor: pointer; font-family: var(--font-body);
+  }
+  .logout-btn:hover { color: var(--text); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+  /* KPIS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  @media (max-width: 700px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .kpi-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .kpi-val { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1; }
+  .kpi-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+  .kpi.green .kpi-val { color: #4ade80; }
+  .kpi.yellow .kpi-val { color: var(--accent-s); }
+  .kpi.orange .kpi-val { color: var(--accent-d); }
+  .kpi.purple .kpi-val { color: var(--accent-p); }
+
+  /* SEGMENT CARDS */
+  .seg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  @media (max-width: 700px) { .seg-grid { grid-template-columns: 1fr; } }
+  .seg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .seg-card.sender { border-top: 3px solid var(--accent-s); }
+  .seg-card.driver { border-top: 3px solid var(--accent-d); }
+  .seg-card.passenger { border-top: 3px solid var(--accent-p); }
+  .seg-title { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; }
+  .seg-title.sender { color: var(--accent-s); }
+  .seg-title.driver { color: var(--accent-d); }
+  .seg-title.passenger { color: var(--accent-p); }
+  .seg-stat { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .seg-stat:last-child { border-bottom: none; }
+  .seg-stat-label { font-size: 0.78rem; color: var(--muted); }
+  .seg-stat-val { font-family: var(--font-mono); font-size: 0.88rem; color: var(--text); }
+  .conversion-bar {
+    height: 4px; border-radius: 4px; background: var(--border);
+    margin-top: 1rem; overflow: hidden;
+  }
+  .conversion-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .sender .conversion-fill { background: var(--accent-s); }
+  .driver .conversion-fill { background: var(--accent-d); }
+  .passenger .conversion-fill { background: var(--accent-p); }
+  .conversion-label { font-size: 0.7rem; color: var(--muted); margin-top: 0.4rem; }
+
+  /* PASS/FAIL */
+  .verdict {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.25rem 0.7rem; border-radius: 100px;
+    margin-top: 0.75rem;
+  }
+  .verdict.pass { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+  .verdict.fail { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+  .verdict.pending { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  /* SIGNUPS TABLE */
+  .section-title {
+    font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+    margin-bottom: 1rem; color: var(--text);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-title span { font-size: 0.75rem; font-weight: 400; color: var(--muted); font-family: var(--font-body); }
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 2rem;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th {
+    padding: 0.75rem 1rem; text-align: left; font-size: 0.68rem;
+    font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  td { padding: 0.7rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: var(--font-mono); color: #ccc; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.68rem;
+    font-weight: 500; font-family: var(--font-body); letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .badge.sender { background: rgba(232,255,71,0.1); color: var(--accent-s); border: 1px solid rgba(232,255,71,0.2); }
+  .badge.driver { background: rgba(255,107,53,0.1); color: var(--accent-d); border: 1px solid rgba(255,107,53,0.2); }
+  .badge.passenger { background: rgba(123,97,255,0.1); color: var(--accent-p); border: 1px solid rgba(123,97,255,0.2); }
+  .trust-text { color: #888; font-family: var(--font-body); font-size: 0.78rem; font-style: italic; max-width: 260px; line-height: 1.4; }
+
+  .empty-state { padding: 3rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+  .loading { padding: 2rem; text-align: center; color: var(--muted); font-size: 0.82rem; font-family: var(--font-mono); }
+
+  /* SOURCE BREAKDOWN */
+  .source-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+  @media (max-width: 600px) { .source-grid { grid-template-columns: 1fr; } }
+  .source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .source-row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .source-row:last-child { border-bottom: none; }
+  .source-name { font-size: 0.8rem; color: #aaa; font-family: var(--font-mono); }
+  .source-count { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: var(--text); }
+
+  /* POSTAL MAP */
+  .postal-grid { columns: 3; gap: 0.5rem; margin-top: 0.75rem; }
+  @media (max-width: 500px) { .postal-grid { columns: 2; } }
+  .postal-chip {
+    display: inline-flex; align-items: center; justify-content: space-between;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.3rem 0.6rem; margin-bottom: 0.4rem;
+    width: 100%; font-family: var(--font-mono); font-size: 0.75rem; break-inside: avoid;
+  }
+  .postal-chip span { color: var(--muted); font-size: 0.7rem; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Couride</div>
+    <div class="login-sub">Smoke Test Dashboard · Founder Access</div>
+    <input type="email" id="login-email" placeholder="Email address" autocomplete="email"/>
+    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password"/>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <header>
+    <div class="header-logo">Cou<span>ride</span> · Smoke Test</div>
+    <div class="header-right">
+      <div class="last-refresh" id="last-refresh">—</div>
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi yellow">
+        <div class="kpi-label">Total Signups</div>
+        <div class="kpi-val" id="kpi-total">—</div>
+        <div class="kpi-sub">All segments</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-label">Page Views</div>
+        <div class="kpi-val" id="kpi-views">—</div>
+        <div class="kpi-sub">Tracked visits</div>
+      </div>
+      <div class="kpi orange">
+        <div class="kpi-label">Conversion Rate</div>
+        <div class="kpi-val" id="kpi-cvr">—</div>
+        <div class="kpi-sub">Target: >3%</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Top Postal</div>
+        <div class="kpi-val" id="kpi-postal" style="font-size:1.3rem">—</div>
+        <div class="kpi-sub">Highest demand area</div>
+      </div>
+    </div>
+
+    <!-- SEGMENT BREAKDOWN -->
+    <div class="seg-grid">
+      <div class="seg-card sender">
+        <div class="seg-title sender">📦 Senders</div>
+        <div class="seg-stat"><span class="seg-stat-label">Signups</span><span class="seg-stat-val" id="s-signups">—</span></div>
+        <div class="seg-stat"><span class="seg-stat-label">Page Views</span><span class="seg-stat-val" id="s-views">—</span></div>
+        <div class="seg-stat"><span class="seg-stat-label">Conversion</span><span class="seg-stat-val" id="s-cvr">—</span></div>
+        <div class="conversion-bar"><div class="conversion-fill" id="s-bar" style="width:0%"></div></div>
+        <div class="conversion-label">3% threshold</div>
+        <div id="s-verdict" class="verdict pending">⏳ Collecting data</div>
+      </div>
+      <div class="seg-card driver">
+        <div class="seg-title driver">🚗 Drivers</div>
+        <div class="seg-stat"><span class="seg-stat-label">Signups</span><span class="seg-stat-val" id="d-signups">—</span></div>
+        <div class="seg-stat"><span class="seg-stat-label">Page Views</span><span class="seg-stat-val" id="d-views">—</span></div>
+        <div class="seg-stat"><span class="seg-stat-label">Conversion</span><span class="seg-stat-val" id="d-cvr">—</span></div>
+        <div class="conversion-bar"><div class="conversion-fill" id="d-bar" style="width:0%"></div></div>
+        <div class="conversion-label">3% threshold</div>
+        <div id="d-verdict" class="verdict pending">⏳ Collecting data</div>
+      </div>
+      <div class="seg-card passenger">
+        <div class="seg-title passenger">🎒 Passengers</div>
+        <div class="seg-stat"><span class="seg-stat-label">Signups</span><span class="seg-stat-val" id="p-signups">—</span></div>
+        <div class="seg-stat"><span class="seg-stat-label">Page Views</span><span class="seg-stat-val" id="p-views">—</span></div>
+        <div class="seg-stat"><span class="seg-stat-label">Conversion</span><span class="seg-stat-val" id="p-cvr">—</span></div>
+        <div class="conversion-bar"><div class="conversion-fill" id="p-bar" style="width:0%"></div></div>
+        <div class="conversion-label">3% threshold</div>
+        <div id="p-verdict" class="verdict pending">⏳ Collecting data</div>
+      </div>
+    </div>
+
+    <!-- SOURCE + POSTAL -->
+    <div class="source-grid">
+      <div class="source-card">
+        <div class="section-title">Traffic Sources <span>Where signups come from</span></div>
+        <div id="sources-list"><div class="empty-state">No data yet</div></div>
+      </div>
+      <div class="source-card">
+        <div class="section-title">Postal Codes <span>Geographic demand map</span></div>
+        <div class="postal-grid" id="postal-list"></div>
+      </div>
+    </div>
+
+    <!-- SIGNUPS TABLE -->
+    <div class="section-title">All Signups <span id="signup-count-label"></span></div>
+    <div class="table-wrap">
+      <div class="loading" id="table-loading">Loading signups...</div>
+      <table id="signups-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Segment</th>
+            <th>Postal</th>
+            <th>Source</th>
+            <th>Trust Answer</th>
+          </tr>
+        </thead>
+        <tbody id="signups-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="signups-empty" style="display:none">No signups yet. Share the links and run your ads!</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3V2bWp4am1uaHVjcmtqd3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjY2NTEsImV4cCI6MjA5Mjc0MjY1MX0.oDiUZN2bUqgcg6_LoP4Bblpm4zzu7D23K2FyfAlvDzw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = error.message; return; }
+  showDashboard();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function showDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadData();
+  setInterval(loadData, 60000);
+}
+
+async function loadData() {
+  document.getElementById('last-refresh').textContent = 'Refreshing...';
+  const [{ data: signups }, { data: views }] = await Promise.all([
+    sb.from('smoke_test_signups').select('*').order('created_at', { ascending: false }),
+    sb.from('smoke_test_pageviews').select('*')
+  ]);
+
+  const now = new Date();
+  document.getElementById('last-refresh').textContent = 'Last refresh: ' + now.toLocaleTimeString();
+
+  if (!signups || !views) return;
+
+  // --- KPIs ---
+  const totalSignups = signups.length;
+  const totalViews = views.length;
+  const cvr = totalViews > 0 ? ((totalSignups / totalViews) * 100).toFixed(1) : '0.0';
+  document.getElementById('kpi-total').textContent = totalSignups;
+  document.getElementById('kpi-views').textContent = totalViews;
+  document.getElementById('kpi-cvr').textContent = cvr + '%';
+
+  // top postal
+  const postalCounts = {};
+  signups.forEach(s => { if (s.postal_code) { postalCounts[s.postal_code.toUpperCase()] = (postalCounts[s.postal_code.toUpperCase()]||0)+1; } });
+  const topPostal = Object.entries(postalCounts).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('kpi-postal').textContent = topPostal ? topPostal[0].slice(0,3)+'...' : '—';
+
+  // --- Segment stats ---
+  const segments = ['sender', 'driver', 'passenger'];
+  const ids = { sender: 's', driver: 'd', passenger: 'p' };
+  segments.forEach(seg => {
+    const segSignups = signups.filter(s => s.segment === seg).length;
+    const segViews = views.filter(v => v.segment === seg).length;
+    const segCvr = segViews > 0 ? ((segSignups / segViews) * 100).toFixed(1) : '0.0';
+    const id = ids[seg];
+    document.getElementById(id+'-signups').textContent = segSignups;
+    document.getElementById(id+'-views').textContent = segViews;
+    document.getElementById(id+'-cvr').textContent = segCvr + '%';
+    const barPct = Math.min(parseFloat(segCvr) / 3 * 100, 100);
+    document.getElementById(id+'-bar').style.width = barPct + '%';
+    const verdictEl = document.getElementById(id+'-verdict');
+    if (segViews < 50) {
+      verdictEl.className = 'verdict pending'; verdictEl.textContent = '⏳ Need more traffic';
+    } else if (parseFloat(segCvr) >= 3) {
+      verdictEl.className = 'verdict pass'; verdictEl.textContent = '✅ PASSING — Keep going';
+    } else {
+      verdictEl.className = 'verdict fail'; verdictEl.textContent = '⚠️ Below 3% — Investigate';
+    }
+  });
+
+  // --- Sources ---
+  const sourceCounts = {};
+  signups.forEach(s => { const src = s.ad_source || 'direct'; sourceCounts[src] = (sourceCounts[src]||0)+1; });
+  const sourcesEl = document.getElementById('sources-list');
+  const sortedSources = Object.entries(sourceCounts).sort((a,b)=>b[1]-a[1]);
+  if (sortedSources.length === 0) {
+    sourcesEl.innerHTML = '<div class="empty-state">No data yet</div>';
+  } else {
+    sourcesEl.innerHTML = sortedSources.map(([src, cnt]) =>
+      `<div class="source-row"><span class="source-name">${src}</span><span class="source-count">${cnt}</span></div>`
+    ).join('');
+  }
+
+  // --- Postal ---
+  const postalEl = document.getElementById('postal-list');
+  const sortedPostal = Object.entries(postalCounts).sort((a,b)=>b[1]-a[1]).slice(0, 18);
+  postalEl.innerHTML = sortedPostal.map(([code, cnt]) =>
+    `<div class="postal-chip">${code} <span>${cnt}</span></div>`
+  ).join('') || '<div style="color:#555;font-size:0.8rem;">No postal codes yet</div>';
+
+  // --- Signups table ---
+  document.getElementById('table-loading').style.display = 'none';
+  document.getElementById('signup-count-label').textContent = totalSignups + ' total';
+  if (signups.length === 0) {
+    document.getElementById('signups-empty').style.display = 'block';
+    document.getElementById('signups-table').style.display = 'none';
+  } else {
+    document.getElementById('signups-empty').style.display = 'none';
+    document.getElementById('signups-table').style.display = 'table';
+    document.getElementById('signups-tbody').innerHTML = signups.map(s => {
+      const d = new Date(s.created_at);
+      const dateStr = d.toLocaleDateString('en-CA') + ' ' + d.toLocaleTimeString('en-CA', {hour:'2-digit', minute:'2-digit'});
+      return `<tr>
+        <td>${dateStr}</td>
+        <td>${escHtml(s.name)}</td>
+        <td>${escHtml(s.email)}</td>
+        <td><span class="badge ${s.segment}">${s.segment}</span></td>
+        <td>${s.postal_code || '—'}</td>
+        <td>${s.ad_source || 'direct'}</td>
+        <td><div class="trust-text">${s.trust_answer ? escHtml(s.trust_answer.slice(0,120)) + (s.trust_answer.length > 120 ? '…' : '') : '—'}</div></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Auto-login check
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { showDashboard(); }
+})();
+</script>
+</body>
+</html>

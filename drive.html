@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Couride — Earn Money on Drives You're Already Taking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @media (prefers-color-scheme: light) { html, body { background: #0d0f1a !important; color: #f0f0f0 !important; } }
+  :root {
+    --bg: #0d0f1a;
+    --surface: #13172b;
+    --border: #1f2440;
+    --accent: #FF6B35;
+    --accent2: #E8FF47;
+    --text: #f0f0f0;
+    --muted: #666;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; color-scheme: dark; background: #0d0f1a !important; }
+  body {
+    background: #0d0f1a !important;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(13,15,26,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text); }
+  .nav-pill {
+    background: var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+  }
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 2rem 4rem;
+    max-width: 780px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+  .hero-inner { width: 100%; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,107,53,0.1);
+    border: 1px solid rgba(255,107,53,0.25);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 8vw, 5rem);
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .sub {
+    font-size: 1.1rem;
+    color: #aaa;
+    max-width: 520px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  /* EARNINGS CALCULATOR */
+  .calculator {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s 0.3s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .calculator::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(255,107,53,0.08), transparent 70%);
+    pointer-events: none;
+  }
+  .calc-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .calc-title span { color: var(--accent); }
+  .calc-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+  .slider-wrap { margin-bottom: 1rem; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 0.4rem;
+  }
+  .slider-label strong { color: var(--text); font-weight: 500; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    outline: none;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+  }
+  input[type="range"]:focus { box-shadow: none; border: none; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+  .payout-display {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.2);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .payout-label { font-size: 0.8rem; color: #888; }
+  .payout-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .payout-period { font-size: 0.75rem; color: #666; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(255,107,53,0.3); }
+  .card-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+  .card-title { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  .form-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    animation: fadeUp 0.6s 0.5s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .form-wrap::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,107,53,0.06), transparent 70%);
+    pointer-events: none;
+  }
+  .form-title { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .form-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; color: #888; text-transform: uppercase; }
+  input[type="text"], input[type="email"], textarea, select {
+    background: #0d0f1a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  input[type="text"]::placeholder, input[type="email"]::placeholder, textarea::placeholder { color: #444; }
+  input[type="text"]:focus, input[type="email"]:focus, textarea:focus, select:focus {
+    border-color: rgba(255,107,53,0.5);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.06);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  .btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0d0f1a;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    padding: 0.9rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255,107,53,0.3); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .disclaimer { font-size: 0.72rem; color: #555; text-align: center; margin-top: 0.75rem; line-height: 1.5; }
+  .success-state { display: none; text-align: center; padding: 2rem 0; }
+  .success-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  .success-title { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--accent); }
+  .success-sub { font-size: 0.9rem; color: #888; max-width: 300px; margin: 0 auto; }
+  .section { max-width: 780px; margin: 0 auto; padding: 4rem 2rem; position: relative; z-index: 1; }
+  .section-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+  .section-title { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.8rem, 5vw, 2.8rem); letter-spacing: -0.03em; margin-bottom: 3rem; }
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: 1.5rem; padding-bottom: 2.5rem; position: relative; }
+  .step:not(:last-child)::before { content: ''; position: absolute; left: 23px; top: 48px; bottom: 0; width: 2px; background: var(--border); }
+  .step-num { width: 48px; height: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 1rem; color: var(--accent); flex-shrink: 0; position: relative; z-index: 1; }
+  .step-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; padding-top: 0.6rem; }
+  .step-desc { font-size: 0.88rem; color: #888; }
+  footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-size: 0.78rem; color: var(--muted); position: relative; z-index: 1; }
+  footer a { color: var(--accent); text-decoration: none; }
+  .other-pages { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+  .page-link { font-size: 0.8rem; color: #666; text-decoration: none; padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; transition: color 0.2s, border-color 0.2s; }
+  .page-link:hover { color: var(--text); border-color: #444; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Cou<span>ride</span></div>
+  <div class="nav-pill">Driver Early Access</div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="tag">For Drivers</div>
+      <h1>You're already driving.<br/><em>Get paid for it.</em></h1>
+      <p class="sub">Earn $15–$40 extra per trip by carrying packages along your existing route. No detours. No schedule changes. Just extra income on drives you're already taking.</p>
+
+      <div class="calculator">
+        <div class="calc-title">💰 Earnings <span>Calculator</span></div>
+        <div class="calc-sub">See what you could earn based on your driving habits</div>
+        <div class="slider-wrap">
+          <div class="slider-label">
+            <span>Trips per week</span>
+            <strong id="trips-label">4 trips</strong>
+          </div>
+          <input type="range" min="1" max="20" value="4" id="trips-slider" oninput="updateCalc()"/>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-label">
+            <span>Avg km per trip</span>
+            <strong id="km-label">20 km</strong>
+          </div>
+          <input type="range" min="5" max="80" value="20" id="km-slider" oninput="updateCalc()"/>
+        </div>
+        <div class="payout-display">
+          <div>
+            <div class="payout-label">Estimated monthly earnings</div>
+            <div class="payout-period">Based on 2 packages/trip avg at $0.35/km base</div>
+          </div>
+          <div>
+            <div class="payout-num" id="payout">$196</div>
+            <div class="payout-period">/month</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">🛣️</div>
+          <div class="card-title">Your route, your terms</div>
+          <div class="card-desc">You only accept packages that fit your existing drive. Never go out of your way.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">Instant payouts</div>
+          <div class="card-desc">Money hits your account the moment delivery is confirmed. No weekly delays.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔒</div>
+          <div class="card-title">Verified senders</div>
+          <div class="card-desc">Every sender is ID-verified. Every package is scanned. You're protected.</div>
+        </div>
+      </div>
+
+      <div class="form-wrap">
+        <div id="form-content">
+          <div class="form-title">Sign up as an early driver</div>
+          <div class="form-sub">We'll contact you before anyone else. You'll help us shape the driver experience before we launch.</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>First name</label>
+              <input type="text" id="name" placeholder="Jordan" required/>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="email" placeholder="jordan@gmail.com" required/>
+            </div>
+            <div class="field">
+              <label>Postal code</label>
+              <input type="text" id="postal" placeholder="V5K 0A1" maxlength="7"/>
+            </div>
+            <div class="field">
+              <label>How often do you drive?</label>
+              <select id="freq">
+                <option value="">Select...</option>
+                <option>Daily commute</option>
+                <option>Several times a week</option>
+                <option>Weekends mainly</option>
+                <option>Irregular / as needed</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>What would make you trust carrying a stranger's package?</label>
+              <textarea id="trust" placeholder="e.g. background check on sender, package scanning, insurance coverage..."></textarea>
+            </div>
+          </div>
+          <button class="btn" id="submit-btn" onclick="handleSubmit()">Register as a Driver — Free Early Access →</button>
+          <p class="disclaimer">No commitments. We're validating interest before we build. You'll hear from the founder directly within 48 hours.</p>
+        </div>
+        <div class="success-state" id="success-state">
+          <span class="success-icon">🚗</span>
+          <div class="success-title">You're in.</div>
+          <p class="success-sub">We'll reach out personally within 48 hours. We need your honest feedback on what would make this worth your time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">How earning works</div>
+    <h2 class="section-title">Carry. Deliver. Get paid.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Set your route before you leave</div>
+          <div class="step-desc">Enter your start and destination. Couride shows you available packages along your path. You pick what fits.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Pick up with a scan</div>
+          <div class="step-desc">Meet the sender, scan the package QR code in the app. Takes under 2 minutes. Everything is logged.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Drop off, get paid instantly</div>
+          <div class="step-desc">Recipient scans the delivery code. Payment hits your account immediately, no waiting.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 Couride Technologies Inc. · Metro Vancouver, BC</div>
+  <div class="other-pages">
+    <a class="page-link" href="send.html">Need to send a package? →</a>
+    <a class="page-link" href="ride.html">Need a ride? →</a>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3V2bWp4am1uaHVjcmtqd3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjY2NTEsImV4cCI6MjA5Mjc0MjY1MX0.oDiUZN2bUqgcg6_LoP4Bblpm4zzu7D23K2FyfAlvDzw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const params = new URLSearchParams(window.location.search);
+const adSource = params.get('utm_source') || params.get('ref') || 'direct';
+const variant = params.get('v') || 'v1';
+
+(async () => { await sb.from('smoke_test_pageviews').insert({ segment: 'driver', ad_source: adSource, page_variant: variant }); })();
+
+function updateCalc() {
+  const trips = parseInt(document.getElementById('trips-slider').value);
+  const km = parseInt(document.getElementById('km-slider').value);
+  document.getElementById('trips-label').textContent = trips + ' trips';
+  document.getElementById('km-label').textContent = km + ' km';
+  const monthly = Math.round(trips * 4.33 * km * 0.35 * 0.9);
+  document.getElementById('payout').textContent = '$' + monthly;
+}
+
+async function handleSubmit() {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const postal = document.getElementById('postal').value.trim();
+  const trust = document.getElementById('trust').value.trim();
+  const btn = document.getElementById('submit-btn');
+  if (!name || !email) { alert('Name and email are required.'); return; }
+  if (!email.includes('@')) { alert('Please enter a valid email.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  const { error } = await sb.from('smoke_test_signups').insert({
+    segment: 'driver', name, email, postal_code: postal, trust_answer: trust, ad_source: adSource, page_variant: variant
+  });
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Register as a Driver — Free Early Access →';
+    alert('Something went wrong. Try again.');
+    return;
+  }
+  document.getElementById('form-content').style.display = 'none';
+  document.getElementById('success-state').style.display = 'block';
+}
+</script>
+</body>
+</html>

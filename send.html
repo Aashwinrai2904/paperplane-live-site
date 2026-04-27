@@ -1,113 +1,579 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PaperPlane — Send a package</title>
-  <meta name="description" content="Create a package request on PaperPlane." />
-  <link rel="stylesheet" href="/styles.css" />
+<meta charset="UTF-8"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Couride — Send Anything Across Metro Vancouver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @media (prefers-color-scheme: light) { html, body { background: #0d0f1a !important; color: #f0f0f0 !important; } }
+  :root {
+    --bg: #0d0f1a;
+    --surface: #13172b;
+    --border: #1f2440;
+    --accent: #C8FF00;
+    --accent2: #FF6B35;
+    --text: #f0f0f0;
+    --muted: #7a7f99;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; color-scheme: dark; background: #0d0f1a !important; }
+  body {
+    background: #0d0f1a !important;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(13,15,26,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text); }
+  .nav-pill {
+    background: var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 2rem 4rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .hero-inner { width: 100%; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(232,255,71,0.08);
+    border: 1px solid rgba(232,255,71,0.2);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 8vw, 5rem);
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+    position: relative;
+  }
+  h1 em::after {
+    content: '';
+    position: absolute;
+    bottom: 2px; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  .sub {
+    font-size: 1.1rem;
+    color: #aaa;
+    max-width: 520px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  /* STATS ROW */
+  .stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .stat-item { text-align: left; }
+  .stat-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  /* CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: #13172b;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(232,255,71,0.3); }
+  .card-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.6rem;
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  .card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* FORM */
+  .form-wrap {
+    background: #13172b;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    animation: fadeUp 0.6s 0.5s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .form-wrap::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(232,255,71,0.06), transparent 70%);
+    pointer-events: none;
+  }
+  .form-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+  }
+  .form-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; color: #888; text-transform: uppercase; }
+  input, textarea, select {
+    background: #0d0f1a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: #444; }
+  input:focus, textarea:focus {
+    border-color: rgba(232,255,71,0.5);
+    box-shadow: 0 0 0 3px rgba(232,255,71,0.06);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    padding: 0.9rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(232,255,71,0.25); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .disclaimer {
+    font-size: 0.72rem;
+    color: #555;
+    text-align: center;
+    margin-top: 0.75rem;
+    line-height: 1.5;
+  }
+
+  /* SUCCESS STATE */
+  .success-state {
+    display: none;
+    text-align: center;
+    padding: 2rem 0;
+  }
+  .success-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .success-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent);
+  }
+  .success-sub { font-size: 0.9rem; color: #888; max-width: 300px; margin: 0 auto; }
+
+  /* HOW IT WORKS */
+  .section {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    position: relative;
+    z-index: 1;
+  }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 3rem;
+  }
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 1.5rem;
+    padding-bottom: 2.5rem;
+    position: relative;
+  }
+  .step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 23px; top: 48px; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 48px; height: 48px;
+    background: #13172b;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .step-content {}
+  .step-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    padding-top: 0.6rem;
+  }
+  .step-desc { font-size: 0.88rem; color: #888; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    position: relative;
+    z-index: 1;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* OTHER PAGES LINK */
+  .other-pages {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .page-link {
+    font-size: 0.8rem;
+    color: #666;
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .page-link:hover { color: var(--text); border-color: #444; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
 </head>
 <body>
-  <header class="nav">
-    <div class="brand"><a href="/" style="color: inherit; text-decoration: none;">PaperPlane</a></div>
-    <nav>
-      <a href="/#how">How it works</a>
-      <a href="/#beta">Join beta</a>
-      <a href="/track/">Track package</a>
-    </nav>
-  </header>
 
-  <main>
-    <section class="section" style="max-width: 900px; margin: 0 auto;">
-      <h1>Send a package</h1>
-      <p class="section-copy">
-        Tell us where your package needs to go, and we’ll match it with a traveler already headed that way.
-      </p>
+<nav>
+  <div class="logo">Cou<span>ride</span></div>
+  <div class="nav-pill">Metro Vancouver · Early Access</div>
+</nav>
 
-      <form class="beta-form" id="sender-request-form" onsubmit="handleSenderSubmit(event)">
-        <input type="text" name="sender_name" placeholder="Your name" required />
-        <input type="email" name="sender_email" placeholder="Email address" required />
-        <input type="text" name="pickup_location" placeholder="Pickup location" required />
-        <input type="text" name="dropoff_location" placeholder="Dropoff location" required />
+<main>
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="tag">For Senders</div>
+      <h1>Same-day delivery.<br/><em>Someone's already going your way.</em></h1>
+      <p class="sub">Stop overpaying for couriers. Couride matches your package with a real person already driving your route — faster, cheaper, and local.</p>
 
-        <select name="package_size" required>
-          <option value="">Select package size</option>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-        </select>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-num">40%</div>
+          <div class="stat-label">Cheaper than FedEx</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">Same day</div>
+          <div class="stat-label">Delivery window</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">Metro Van</div>
+          <div class="stat-label">Coverage area</div>
+        </div>
+      </div>
 
-        <input type="text" name="package_description" placeholder="Package description (optional)" />
-        <input type="datetime-local" name="earliest_pickup_at" />
-        <input type="datetime-local" name="latest_dropoff_at" />
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">📦</div>
+          <div class="card-title">Post a package</div>
+          <div class="card-desc">Set pickup & drop-off. A driver already going that way picks it up.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">💸</div>
+          <div class="card-title">Pay less</div>
+          <div class="card-desc">No empty trucks. No wasted fuel. You pay for the detour, not the whole trip.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📍</div>
+          <div class="card-title">Track live</div>
+          <div class="card-desc">Real-time GPS. Know exactly where your package is, every minute.</div>
+        </div>
+      </div>
 
-        <button class="button primary" type="submit">Submit request</button>
-      </form>
-
-      <p id="sender-form-message" class="form-message"></p>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div>© 2026 PaperPlane</div>
-    <div class="footer-links">
-      <a href="/terms.html">Terms</a>
-      <a href="/privacy.html">Privacy</a>
-      <a href="mailto:hello@paperplane.live">Contact</a>
+      <div class="form-wrap">
+        <div id="form-content">
+          <div class="form-title">Get early access — it's free</div>
+          <div class="form-sub">We're building this for Metro Vancouver. Tell us about yourself and we'll reach out personally before launch.</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>First name</label>
+              <input type="text" id="name" placeholder="Alex" required/>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="email" placeholder="alex@gmail.com" required/>
+            </div>
+            <div class="field">
+              <label>Postal code</label>
+              <input type="text" id="postal" placeholder="V7M 1A1" maxlength="7"/>
+            </div>
+            <div class="field">
+              <label>How often do you ship?</label>
+              <select id="freq">
+                <option value="">Select...</option>
+                <option>A few times a week</option>
+                <option>Once a week</option>
+                <option>A few times a month</option>
+                <option>Rarely</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>What would make you trust a service like this?</label>
+              <textarea id="trust" placeholder="e.g. verified drivers, package insurance, live tracking..."></textarea>
+            </div>
+          </div>
+          <button class="btn" id="submit-btn" onclick="handleSubmit()">Join the Waitlist — Free Early Access →</button>
+          <p class="disclaimer">No spam. No product yet. We're validating demand before we build. You'll get a personal email from the founder within 48 hours.</p>
+        </div>
+        <div class="success-state" id="success-state">
+          <span class="success-icon">✅</span>
+          <div class="success-title">You're on the list.</div>
+          <p class="success-sub">Aashwin (founder) will email you personally within 48 hours. We want to ask you a few questions before we build this.</p>
+        </div>
+      </div>
     </div>
-  </footer>
+  </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://dxzmqcrhckccgwjhdoiw.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2wVe0c6Go76niXv9JEjwBQ_f9e6v6_a';
+  <section class="section">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Send a package in 3 steps</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Post your delivery</div>
+          <div class="step-desc">Enter pickup address, destination, package size, and when it needs to arrive. Takes 90 seconds.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Get matched instantly</div>
+          <div class="step-desc">Couride finds a verified driver already heading your way. You see their route, rating, and ETA before confirming.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Track it live</div>
+          <div class="step-desc">Real-time GPS updates. The recipient gets a notification when it's arriving. Both sides confirm delivery with a code.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
 
-    const supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+<footer>
+  <div>© 2025 Couride Technologies Inc. · Metro Vancouver, BC</div>
+  <div class="other-pages">
+    <a class="page-link" href="drive.html">Are you a driver? →</a>
+    <a class="page-link" href="ride.html">Need a ride? →</a>
+  </div>
+</footer>
 
-    async function handleSenderSubmit(event) {
-      event.preventDefault();
+<script>
+const SUPABASE_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3V2bWp4am1uaHVjcmtqd3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjY2NTEsImV4cCI6MjA5Mjc0MjY1MX0.oDiUZN2bUqgcg6_LoP4Bblpm4zzu7D23K2FyfAlvDzw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-      const form = event.target;
-      const messageEl = document.getElementById('sender-form-message');
-      const submitButton = form.querySelector('button[type="submit"]');
+// Track pageview
+const params = new URLSearchParams(window.location.search);
+const adSource = params.get('utm_source') || params.get('ref') || 'direct';
+const variant = params.get('v') || 'v1';
 
-      const formData = new FormData(form);
+(async () => {
+  await sb.from('smoke_test_pageviews').insert({ segment: 'sender', ad_source: adSource, page_variant: variant });
+})();
 
-      const payload = {
-        sender_name: String(formData.get('sender_name') || '').trim(),
-        sender_email: String(formData.get('sender_email') || '').trim(),
-        pickup_location: String(formData.get('pickup_location') || '').trim(),
-        dropoff_location: String(formData.get('dropoff_location') || '').trim(),
-        package_size: String(formData.get('package_size') || '').trim(),
-        package_description: String(formData.get('package_description') || '').trim() || null,
-        earliest_pickup_at: formData.get('earliest_pickup_at') || null,
-        latest_dropoff_at: formData.get('latest_dropoff_at') || null
-      };
+async function handleSubmit() {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const postal = document.getElementById('postal').value.trim();
+  const trust = document.getElementById('trust').value.trim();
+  const btn = document.getElementById('submit-btn');
 
-      messageEl.textContent = '';
-      submitButton.disabled = true;
-      submitButton.textContent = 'Submitting...';
+  if (!name || !email) { alert('Name and email are required.'); return; }
+  if (!email.includes('@')) { alert('Please enter a valid email.'); return; }
 
-      const { error } = await supabaseClient
-        .from('sender_requests')
-        .insert([payload]);
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
 
-      if (error) {
-        console.error('Supabase insert error:', error);
-        messageEl.textContent = 'Something went wrong. Please try again.';
-        submitButton.disabled = false;
-        submitButton.textContent = 'Submit request';
-        return;
-      }
+  const { error } = await sb.from('smoke_test_signups').insert({
+    segment: 'sender',
+    name, email,
+    postal_code: postal,
+    trust_answer: trust,
+    ad_source: adSource,
+    page_variant: variant
+  });
 
-      form.reset();
-      messageEl.textContent = 'Your package request has been submitted.';
-      submitButton.disabled = false;
-      submitButton.textContent = 'Submit request';
-    }
-  </script>
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Join the Waitlist — Free Early Access →';
+    alert('Something went wrong. Try again.');
+    console.error(error);
+    return;
+  }
+
+  document.getElementById('form-content').style.display = 'none';
+  document.getElementById('success-state').style.display = 'block';
+}
+</script>
 </body>
 </html>

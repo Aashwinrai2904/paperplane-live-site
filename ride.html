@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Couride — Rides That Actually Make Sense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @media (prefers-color-scheme: light) { html, body { background: #0d0f1a !important; color: #f0f0f0 !important; } }
+  :root {
+    --bg: #0d0f1a;
+    --surface: #13172b;
+    --border: #1f2440;
+    --accent: #7B61FF;
+    --accent-glow: rgba(123,97,255,0.15);
+    --text: #f0f0f0;
+    --muted: #666;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; color-scheme: dark; background: #0d0f1a !important; }
+  body { background: #0d0f1a !important; color: var(--text); font-family: var(--font-body); font-weight: 300; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.4; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(13,15,26,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .logo { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; letter-spacing: -0.03em; color: var(--accent); }
+  .logo span { color: var(--text); }
+  .nav-pill { background: var(--border); color: var(--muted); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.35rem 0.9rem; border-radius: 100px; }
+  .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; max-width: 780px; margin: 0 auto; z-index: 1; }
+  .hero-inner { width: 100%; }
+  .tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(123,97,255,0.1); border: 1px solid rgba(123,97,255,0.25); color: var(--accent); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.4rem 1rem; border-radius: 100px; margin-bottom: 2rem; animation: fadeUp 0.6s ease both; }
+  .tag::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+  h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.6rem, 8vw, 5rem); line-height: 1.0; letter-spacing: -0.04em; margin-bottom: 1.5rem; animation: fadeUp 0.6s 0.1s ease both; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .sub { font-size: 1.1rem; color: #aaa; max-width: 520px; margin-bottom: 2.5rem; animation: fadeUp 0.6s 0.2s ease both; }
+
+  .compare-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .compare-table table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .compare-table th { padding: 0.75rem 1.25rem; text-align: left; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .compare-table th.highlight { color: var(--accent); }
+  .compare-table td { padding: 0.75rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table td.highlight { color: var(--accent); font-weight: 500; }
+  .compare-table td.muted { color: var(--muted); }
+  .check { color: #4ade80; }
+  .cross { color: #f87171; }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; animation: fadeUp 0.6s 0.4s ease both; }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; transition: border-color 0.2s; }
+  .card:hover { border-color: rgba(123,97,255,0.3); }
+  .card-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+  .card-title { font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  .form-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; animation: fadeUp 0.6s 0.5s ease both; position: relative; overflow: hidden; }
+  .form-wrap::before { content: ''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; background: radial-gradient(circle, var(--accent-glow), transparent 70%); pointer-events: none; }
+  .form-title { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .form-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; color: #888; text-transform: uppercase; }
+  input[type="text"], input[type="email"], textarea, select { background: #0d0f1a; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 0.95rem; padding: 0.75rem 1rem; transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%; }
+  input[type="text"]::placeholder, input[type="email"]::placeholder, textarea::placeholder { color: #444; }
+  input[type="text"]:focus, input[type="email"]:focus, textarea:focus, select:focus { border-color: rgba(123,97,255,0.5); box-shadow: 0 0 0 3px rgba(123,97,255,0.06); }
+  textarea { resize: vertical; min-height: 80px; }
+  .btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: var(--font-display); font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; padding: 0.9rem; cursor: pointer; margin-top: 1rem; transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(123,97,255,0.35); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .disclaimer { font-size: 0.72rem; color: #555; text-align: center; margin-top: 0.75rem; line-height: 1.5; }
+  .success-state { display: none; text-align: center; padding: 2rem 0; }
+  .success-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  .success-title { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--accent); }
+  .success-sub { font-size: 0.9rem; color: #888; max-width: 300px; margin: 0 auto; }
+  footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-size: 0.78rem; color: var(--muted); position: relative; z-index: 1; }
+  footer a { color: var(--accent); text-decoration: none; }
+  .other-pages { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+  .page-link { font-size: 0.8rem; color: #666; text-decoration: none; padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; transition: color 0.2s, border-color 0.2s; }
+  .page-link:hover { color: var(--text); border-color: #444; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Cou<span>ride</span></div>
+  <div class="nav-pill">Passenger Early Access</div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="tag">For Passengers</div>
+      <h1>A ride that's actually<br/><em>going your way.</em></h1>
+      <p class="sub">Couride matches you with a real driver who's already heading to your destination. Cheaper than Uber. More reliable than transit. No surge pricing.</p>
+
+      <div class="compare-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="highlight">Couride</th>
+              <th>Uber / Lyft</th>
+              <th>Transit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Price (30 km trip)</td>
+              <td class="highlight">~$8–14</td>
+              <td class="muted">$22–38+</td>
+              <td class="muted">$3.40 (slow)</td>
+            </tr>
+            <tr>
+              <td>Surge pricing</td>
+              <td class="highlight"><span class="check">✓</span> Never</td>
+              <td class="muted"><span class="cross">✗</span> Frequent</td>
+              <td class="muted">N/A</td>
+            </tr>
+            <tr>
+              <td>Driver is already going there</td>
+              <td class="highlight"><span class="check">✓</span> Always</td>
+              <td class="muted"><span class="cross">✗</span> No</td>
+              <td class="muted">—</td>
+            </tr>
+            <tr>
+              <td>Metro Vancouver coverage</td>
+              <td class="highlight"><span class="check">✓</span> Yes</td>
+              <td class="muted"><span class="check" style="color:#888">✓</span> Yes</td>
+              <td class="muted"><span class="check" style="color:#888">✓</span> Partial</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">💜</div>
+          <div class="card-title">Real routes only</div>
+          <div class="card-desc">Your driver is actually going your way. Not dispatched. Not detoured. Actually going.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">💸</div>
+          <div class="card-title">Split the cost</div>
+          <div class="card-desc">Driver offsets their gas cost. You pay a fraction of a dedicated ride. Everybody wins.</div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⭐</div>
+          <div class="card-title">Verified drivers</div>
+          <div class="card-desc">ID-verified, rated, and reviewed by other passengers. No anonymous strangers.</div>
+        </div>
+      </div>
+
+      <div class="form-wrap">
+        <div id="form-content">
+          <div class="form-title">Get early access</div>
+          <div class="form-sub">We're launching in Metro Vancouver first. Join the list and we'll contact you personally before we go live.</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>First name</label>
+              <input type="text" id="name" placeholder="Sam" required/>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="email" placeholder="sam@gmail.com" required/>
+            </div>
+            <div class="field">
+              <label>Postal code</label>
+              <input type="text" id="postal" placeholder="V6B 2W9" maxlength="7"/>
+            </div>
+            <div class="field">
+              <label>Most common trip type</label>
+              <select id="freq">
+                <option value="">Select...</option>
+                <option>Work commute (daily)</option>
+                <option>Airport / long distance</option>
+                <option>Cross-city errands</option>
+                <option>Late nights / weekends</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>What would stop you from using a service like this?</label>
+              <textarea id="trust" placeholder="e.g. safety concerns, reliability, not knowing the driver..."></textarea>
+            </div>
+          </div>
+          <button class="btn" id="submit-btn" onclick="handleSubmit()">Join the Waitlist — Free Early Access →</button>
+          <p class="disclaimer">Couride isn't live yet. We're testing demand before building. You'll hear from the founder within 48 hours.</p>
+        </div>
+        <div class="success-state" id="success-state">
+          <span class="success-icon">🎉</span>
+          <div class="success-title">You're on the list.</div>
+          <p class="success-sub">The founder will reach out within 48 hours. We have a few questions for you before we build this.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>© 2025 Couride Technologies Inc. · Metro Vancouver, BC</div>
+  <div class="other-pages">
+    <a class="page-link" href="send.html">Need to send a package? →</a>
+    <a class="page-link" href="drive.html">Are you a driver? →</a>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3V2bWp4am1uaHVjcmtqd3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjY2NTEsImV4cCI6MjA5Mjc0MjY1MX0.oDiUZN2bUqgcg6_LoP4Bblpm4zzu7D23K2FyfAlvDzw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const params = new URLSearchParams(window.location.search);
+const adSource = params.get('utm_source') || params.get('ref') || 'direct';
+const variant = params.get('v') || 'v1';
+(async () => { await sb.from('smoke_test_pageviews').insert({ segment: 'passenger', ad_source: adSource, page_variant: variant }); })();
+
+async function handleSubmit() {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const postal = document.getElementById('postal').value.trim();
+  const trust = document.getElementById('trust').value.trim();
+  const btn = document.getElementById('submit-btn');
+  if (!name || !email) { alert('Name and email are required.'); return; }
+  if (!email.includes('@')) { alert('Please enter a valid email.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  const { error } = await sb.from('smoke_test_signups').insert({
+    segment: 'passenger', name, email, postal_code: postal, trust_answer: trust, ad_source: adSource, page_variant: variant
+  });
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Join the Waitlist — Free Early Access →';
+    alert('Something went wrong. Try again.');
+    return;
+  }
+  document.getElementById('form-content').style.display = 'none';
+  document.getElementById('success-state').style.display = 'block';
+}
+</script>
+</body>
+</html>

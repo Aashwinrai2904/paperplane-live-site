@@ -1,1690 +1,1190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Couride · Corridor Pilot</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<meta charset="UTF-8"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#0d0f1a"/>
+<title>Couride · Surrey / Abbotsford ↔ North Shore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--blue:#1747F5;--bl:#4468F7;--bg:#F4F6FF;--glow:rgba(23,71,245,.16);--sur:#fff;--bdr:#E4E9FF;--tx:#0A0F2C;--mu:#6B728A;--ok:#10B981;--warn:#F59E0B;--bad:#EF4444;--r:16px;--rs:10px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Outfit',sans-serif;background:var(--blue);color:var(--tx);display:flex;justify-content:center;align-items:center}
-#app{width:100%;max-width:430px;height:100%;position:relative;overflow:hidden;background:var(--bg);box-shadow:0 0 80px rgba(0,0,0,.3)}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(22px);transition:opacity .25s ease,transform .25s cubic-bezier(.4,0,.2,1);z-index:1}
-.screen.active{opacity:1;pointer-events:all;transform:none;z-index:2}
-.hdr{padding:48px 20px 14px;display:flex;align-items:center;gap:10px;background:var(--sur);border-bottom:1px solid var(--bdr);flex-shrink:0}
-.back{width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx);font-size:18px;flex-shrink:0}
-.hdr-t{font-size:17px;font-weight:800;flex:1}.hdr-s{font-size:11px;font-weight:700;color:var(--blue);background:#EEF2FF;padding:3px 8px;border-radius:99px}
-.sb{flex:1;overflow-y:auto;padding:20px;-webkit-overflow-scrolling:touch}.sb::-webkit-scrollbar{display:none}
-.bot{padding:14px 20px 30px;background:var(--sur);border-top:1px solid var(--bdr);flex-shrink:0}
-.btn{width:100%;padding:15px;border-radius:var(--r);border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px}
-.bp{background:var(--blue);color:#fff;box-shadow:0 4px 20px var(--glow)}.bp:active{transform:scale(.98)}
-.bs{background:var(--bg);color:var(--tx);border:1.5px solid var(--bdr)}
-.btn-sm{width:auto;padding:9px 18px;font-size:13px}
-.lbl{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-.card{background:var(--sur);border-radius:var(--r);border:1px solid var(--bdr);padding:16px;margin-bottom:12px}
-.steps{display:flex;gap:6px;margin-bottom:18px}
-.sd{height:4px;flex:1;border-radius:99px;background:var(--bdr)}.sd.on{background:var(--blue)}
-.inp{width:100%;padding:13px 14px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:var(--bg);font-family:'Outfit',sans-serif;font-size:14px;color:var(--tx);outline:none}
-.inp:focus{border-color:var(--blue);background:#fff}
-.inp-icon{position:relative;margin-bottom:10px}
-.inp-icon .iico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:17px;pointer-events:none}
-.inp-icon input{padding-left:43px}
-.dt{width:100%;padding:13px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:var(--bg);font-family:'Outfit',sans-serif;font-size:14px;color:var(--tx);outline:none;margin-bottom:10px}
-.dt:focus{border-color:var(--blue);background:#fff}
-.seg{display:flex;background:var(--bg);border-radius:var(--rs);padding:3px;margin-bottom:14px}
-.seg-b{flex:1;padding:9px;border-radius:8px;border:none;background:transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--mu);transition:all .18s}
-.seg-b.on{background:#fff;color:var(--tx);box-shadow:0 1px 5px rgba(0,0,0,.08)}
-.stepper{display:flex;align-items:center;border:1.5px solid var(--bdr);border-radius:var(--rs);overflow:hidden;background:#fff;margin-bottom:14px}
-.step-btn{width:44px;height:44px;border:none;background:var(--bg);font-size:20px;font-weight:700;cursor:pointer;color:var(--blue);flex-shrink:0}
-.step-val{flex:1;text-align:center;font-size:18px;font-weight:900;color:var(--tx)}
-.tag{display:inline-flex;align-items:center;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;background:var(--bg);color:var(--mu)}
-.tb{background:#EEF2FF;color:var(--blue)}.tg{background:#ECFDF5;color:#059669}.to{background:#FFF7ED;color:#EA580C}
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.pill{padding:8px 16px;border-radius:99px;border:1.5px solid var(--bdr);background:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s}
-.pill.on{border-color:var(--blue);background:#EEF2FF;color:var(--blue)}
-.shim{background:linear-gradient(90deg,var(--bdr) 25%,#fff 50%,var(--bdr) 75%);background-size:200% 100%;animation:sh 1.5s infinite;border-radius:99px;height:5px}
-@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.ta{width:100%;padding:13px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:var(--bg);font-family:'Outfit',sans-serif;font-size:14px;color:var(--tx);outline:none;resize:none}
-.ta:focus{border-color:var(--blue);background:#fff}
-.vg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
-.vc{border-radius:var(--rs);border:2px solid var(--bdr);padding:13px 8px;cursor:pointer;text-align:center;transition:all .18s;background:#fff}
-.vc.on{border-color:var(--blue);background:#EEF2FF}
-.vc-i{font-size:26px;margin-bottom:5px}.vc-n{font-size:11px;font-weight:700}
-.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.pc{border-radius:var(--rs);border:2px solid var(--bdr);padding:13px 8px;cursor:pointer;text-align:center;transition:all .18s;background:#fff}
-.pc.on{border-color:var(--blue);background:#EEF2FF}
-.pc-i{font-size:22px;margin-bottom:5px}.pc-n{font-size:11px;font-weight:700}
-.rp{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:var(--rs);margin-bottom:7px}
-.rdot{width:9px;height:9px;border-radius:50%;background:var(--blue);flex-shrink:0}.rdot.e{background:var(--bad)}
-.rt{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dav{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--bl));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;position:relative}
-.dav .vbadge{position:absolute;bottom:-2px;right:-2px;background:#059669;border:2px solid #fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:7px}
-.vplate{background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800;font-family:'Courier New',monospace;color:#92400E;letter-spacing:1px}
-.tl{display:flex;flex-direction:column}
-.tli{display:flex;gap:12px;padding:11px 0}
-.tl-dw{display:flex;flex-direction:column;align-items:center;width:22px;flex-shrink:0}
-.tl-dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--bdr);background:#fff;flex-shrink:0}
-.tl-dot.done{background:var(--blue);border-color:var(--blue)}
-.tl-dot.act{background:var(--blue);border-color:var(--blue);box-shadow:0 0 0 4px var(--glow)}
-.tl-line{width:2px;flex:1;background:var(--bdr);margin-top:3px}.tl-line.done{background:var(--blue)}
-.tl-l{font-size:13px;font-weight:700;padding-top:1px}.tl-s{font-size:11px;color:var(--mu);margin-top:2px}
-.earn-card{background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:var(--r);padding:14px;margin-bottom:12px}
-.corridor-warn{background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:var(--rs);padding:12px 14px;margin-bottom:14px}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#0A0F2C;color:#fff;padding:11px 20px;border-radius:99px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;white-space:nowrap;pointer-events:none}
-.toast.show{transform:translateX(-50%) translateY(0)}
+/* ============================================
+   COURIDE DESIGN SYSTEM v5
+   Navy #0d0f1a + Yellow-green #C8FF00
+   ============================================ */
+:root {
+  --bg:        #0d0f1a;
+  --bg2:       #090b14;
+  --surface:   #13172b;
+  --surface2:  #1a1f38;
+  --surface3:  #212746;
+  --border:    #1f2440;
+  --border2:   #2a3060;
+  --accent:    #C8FF00;
+  --accent-d:  rgba(200,255,0,0.12);
+  --accent-b:  rgba(200,255,0,0.25);
+  --orange:    #FF6B35;
+  --purple:    #7B61FF;
+  --green:     #4ade80;
+  --red:       #f87171;
+  --text:      #f0f0f0;
+  --text2:     #9aa3c8;
+  --muted:     #505880;
+  --font-d:    'Syne', sans-serif;
+  --font-b:    'DM Sans', sans-serif;
+  --r:         12px;
+  --r-lg:      18px;
+}
+@media (prefers-color-scheme: light) { html,body{background:#0d0f1a!important;color:#f0f0f0!important;} }
+@keyframes spin{to{transform:rotate(360deg);}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{background:#0d0f1a!important;color-scheme:dark;}
+body{background:#0d0f1a!important;color:var(--text);font-family:var(--font-b);font-weight:300;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
 
-/* ══ AUTH ══ */
-#sa{background:#fff;overflow:hidden}
-.auth-w{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:32px 28px 40px}
-.auth-w::-webkit-scrollbar{display:none}
-.cr-mark{width:64px;height:64px;border-radius:18px;background:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 32px var(--glow);flex-direction:column}
-.cr-mark-inner{display:flex;align-items:center;gap:1px}
-.cr-c{font-size:26px;font-weight:900;color:#fff;line-height:1}
-.cr-r{font-size:18px;font-weight:900;color:rgba(255,255,255,.7);line-height:1}
-.cr-sub-mark{font-size:8px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
-.auth-brand{font-size:28px;font-weight:900;color:var(--blue);text-align:center}
-.auth-div{font-size:11px;color:var(--mu);margin:12px 0;position:relative;text-align:center;width:100%}
-.auth-div::before,.auth-div::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:var(--bdr)}
-.auth-div::before{left:0}.auth-div::after{right:0}
-.auth-social{background:#fff;color:var(--tx);border:1.5px solid var(--bdr);font-weight:600;font-size:14px;border-radius:var(--rs);padding:12px 16px;gap:10px;margin-bottom:9px}
-.auth-social:active{background:var(--bg)}
-.auth-apple{background:#000;color:#fff;border-color:#000}
-.auth-apple:active{background:#222}
-.auth-fb{font-size:13px;padding:11px 10px;background:#fff;color:#1877F2;border:1.5px solid #D0E3FF}
-.auth-x{font-size:13px;padding:11px 10px;background:#000;color:#fff;border-color:#000}
-.otp-section{animation:fadeIn .3s;width:100%}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+/* SCREENS */
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
 
-/* ══ CORRIDOR MAP ══ */
-.corridor-map-wrap{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#EEF2FF,#F0F4FF);border-radius:var(--r);border:1px solid #D0D9FF;padding:14px 10px;margin-bottom:14px;position:relative;overflow:hidden}
-.corr-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;width:60px}
-.corr-node-dot{width:12px;height:12px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 3px rgba(23,71,245,.18)}
-.corr-node-lbl{font-size:9px;font-weight:800;color:var(--blue);text-align:center;line-height:1.3}
-.corr-track{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 4px}
-.corr-mid-node{display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:5px}
-.corr-mid-dot{width:9px;height:9px;border-radius:50%;background:#F59E0B;box-shadow:0 0 0 3px rgba(245,158,11,.2)}
-.corr-mid-lbl{font-size:8px;font-weight:700;color:#92400E;text-align:center;line-height:1.2}
-.corr-arrow-track{width:100%;height:22px;background:rgba(23,71,245,.07);border-radius:99px;display:flex;align-items:center;overflow:hidden;position:relative}
-.corr-arrow{position:absolute;font-size:17px;font-weight:900;color:var(--blue);animation:arrW 1.4s infinite ease-in-out}
-@keyframes arrW{0%{left:4%;opacity:0}30%{opacity:1}70%{opacity:1}100%{left:84%;opacity:0}}
-@keyframes arrE{0%{right:4%;opacity:0;left:auto;transform:scaleX(-1)}30%{opacity:1}70%{opacity:1}100%{right:84%;opacity:0;left:auto;transform:scaleX(-1)}}
-.corr-arrow.east{animation:arrE 1.4s infinite ease-in-out}
+/* ============================================
+   AUTH SCREEN
+   ============================================ */
+#screen-auth{align-items:center;justify-content:center;padding:2rem 1.5rem;background:#0d0f1a;}
+.auth-wrap{width:100%;max-width:400px;}
 
-/* ══ STOP SELECTOR ══ */
-.stop-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.stop-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:#fff;cursor:pointer;transition:all .18s}
-.stop-item.on{border-color:var(--blue);background:#EEF2FF}
-.stop-item.dimmed{opacity:.35;pointer-events:none;background:var(--bg)}
-.stop-ico{font-size:17px;flex-shrink:0}
-.stop-name{font-size:13px;font-weight:800;flex:1}
-.stop-sub{font-size:10px;color:var(--mu)}
-.stop-chk{width:20px;height:20px;border-radius:50%;border:2px solid var(--bdr);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent}
-.stop-item.on .stop-chk{background:var(--blue);border-color:var(--blue);color:#fff}
+.auth-logo{text-align:center;margin-bottom:2rem;}
+.auth-logo-mark{
+  width:60px;height:60px;background:var(--accent);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:#0d0f1a;
+  margin:0 auto 1rem;box-shadow:0 0 32px rgba(200,255,0,0.25);
+}
+.auth-logo h1{font-family:var(--font-d);font-weight:800;font-size:2.2rem;letter-spacing:-0.05em;color:var(--accent);}
+.auth-logo .pilot-tag{
+  display:inline-block;background:var(--surface);border:1px solid var(--border);
+  color:var(--text2);font-size:0.75rem;padding:0.3rem 0.9rem;border-radius:100px;margin-top:0.6rem;
+}
 
-/* ══ TIER BADGES ══ */
-.tier-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.4px}
-.t-best{background:linear-gradient(135deg,#ECFDF5,#D1FAE5);color:#059669;border:1px solid #BBF7D0}
-.t-good{background:#EEF2FF;color:var(--blue);border:1px solid #C7D7FF}
-.t-possible{background:var(--bg);color:var(--mu);border:1px solid var(--bdr)}
-.match-reason{font-size:11px;color:var(--mu);padding:6px 10px;background:var(--bg);border-radius:var(--rs);margin-top:6px;line-height:1.5}
+/* Tabs */
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:1.5rem;gap:4px;}
+.auth-tab{padding:0.7rem;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:var(--font-d);font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.2s;}
+.auth-tab.active{background:var(--accent);color:#0d0f1a;}
 
-/* ══ DRIVER CARDS ══ */
-.drv-card{background:#fff;border-radius:var(--r);border:1.5px solid var(--bdr);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:all .2s}
-.drv-card:active{border-color:var(--blue);box-shadow:0 4px 16px var(--glow)}
-.drv-card.highlighted{border-color:var(--blue);box-shadow:0 4px 20px var(--glow)}
-.drv-top{padding:14px 14px 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr)}
-.drv-mid{padding:10px 14px;border-bottom:1px solid var(--bdr)}
-.drv-bot{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.dname{font-size:15px;font-weight:800}.dsub{font-size:11px;color:var(--mu);margin-top:2px}
-.dprice{font-size:20px;font-weight:900;color:var(--blue)}.dprice-s{font-size:10px;color:var(--mu);font-weight:600}
+/* Alerts */
+.alert{border-radius:var(--r);padding:0.85rem 1rem;font-size:0.85rem;margin-bottom:1rem;line-height:1.5;display:none;}
+.alert.error{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:#ffaaaa;}
+.alert.success{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:var(--green);}
+.alert.info{background:var(--accent-d);border:1px solid var(--accent-b);color:var(--accent);}
+.alert.show{display:block;}
 
-/* ══ PICKUP CONFIRM ══ */
-.pickup-confirm{background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:var(--r);padding:14px;margin-bottom:12px}
-.pickup-warn{background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:var(--rs);padding:10px 13px;margin-bottom:12px;font-size:12px;color:#92400E;line-height:1.5}
-.pu-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px}
-.pu-row:last-child{margin-bottom:0}
-.pu-ico{font-size:15px;flex-shrink:0;margin-top:2px}
-.pu-lbl{font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.pu-val{font-size:13px;font-weight:700;color:var(--tx)}
-.pu-note{font-size:11px;color:var(--mu);margin-top:1px}
+/* OAuth */
+.oauth-btn{
+  display:flex;align-items:center;justify-content:center;gap:0.75rem;
+  padding:0.85rem;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--surface);color:var(--text);font-family:var(--font-b);
+  font-size:0.92rem;font-weight:500;cursor:pointer;transition:all 0.2s;width:100%;
+  margin-bottom:1rem;
+}
+.oauth-btn:hover{background:var(--surface2);}
+.oauth-btn:active{transform:scale(0.99);}
 
-/* ══ PRICING ══ */
-.price-box{background:var(--sur);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;margin-bottom:12px}
-.price-box-hdr{background:linear-gradient(135deg,#EEF2FF,#F0F4FF);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)}
-.price-box-title{font-size:12px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.6px}
-.price-box-total{font-size:22px;font-weight:900;color:var(--blue)}
-.pline{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid var(--bdr);font-size:13px}
-.pline:last-child{border-bottom:none}
-.pline-lbl{color:var(--mu)}.pline-val{font-weight:700;color:var(--tx)}
-.pline-val.disc{color:var(--ok)}.pline-val.add{color:var(--bad)}
-.pline.total-row{background:var(--bg);border-top:2px solid var(--bdr)}
-.pline.total-row .pline-lbl{font-weight:800;color:var(--tx);font-size:14px}
-.pline.total-row .pline-val{font-size:20px;font-weight:900;color:var(--blue)}
-.pmult-badge{background:#EEF2FF;color:var(--blue);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:800}
-.pmult-badge.warn{background:#FFF7ED;color:#EA580C}
-.pmult-badge.bad{background:#FEF2F2;color:var(--bad)}
-.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.tc{border-radius:var(--rs);border:2px solid var(--bdr);padding:13px 12px;cursor:pointer;transition:all .18s;background:#fff}
-.tc.on{border-color:var(--blue);background:#EEF2FF}
-.tc-l{font-size:13px;font-weight:800}.tc-s{font-size:11px;color:var(--mu);margin-top:2px}
-.tc-p{font-size:19px;font-weight:900;color:var(--blue);margin-top:7px}
-.ride-hero{background:linear-gradient(135deg,var(--blue),var(--bl));padding:24px 20px;color:#fff;border-radius:var(--r);margin-bottom:14px;text-align:center}
-.ride-price-big{font-size:44px;font-weight:900;margin-bottom:4px}
+/* Inputs */
+.input-row{display:flex;align-items:center;gap:0.6rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:0 1rem;margin-bottom:0.75rem;transition:border-color 0.2s;}
+.input-row:focus-within{border-color:rgba(200,255,0,0.4);}
+.input-row .icon{font-size:1rem;flex-shrink:0;}
+.input-row input{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--font-b);font-size:0.95rem;padding:0.85rem 0;outline:none;}
+.input-row input::placeholder{color:var(--muted);}
 
-/* ══ DELIV PREF ══ */
-.dp-card{border-radius:var(--r);border:2px solid var(--bdr);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .2s;background:#fff;position:relative;overflow:hidden}
-.dp-card.on{border-color:var(--blue);background:#EEF2FF}
-.dp-card.on::before{content:'✓';position:absolute;top:10px;right:12px;background:var(--blue);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
-.dp-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.dp-ico{width:44px;height:44px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.dp-name{font-size:15px;font-weight:800}.dp-sub{font-size:12px;color:var(--mu);margin-top:1px}
-.dp-tag-row{display:flex;align-items:center;justify-content:space-between}
-.dp-impact{font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px}
-.dp-impact.ok{background:#ECFDF5;color:#059669}.dp-impact.neu{background:#EEF2FF;color:var(--blue)}.dp-impact.add{background:#FEF2F2;color:var(--bad)}
-.dp-time{font-size:12px;color:var(--mu);font-weight:600}
+.divider{display:flex;align-items:center;gap:0.75rem;color:var(--muted);font-size:0.8rem;margin:1rem 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
-/* ══ WINDOW CARDS ══ */
-.win-card{border-radius:var(--rs);border:2px solid var(--bdr);padding:13px 14px;cursor:pointer;transition:all .18s;background:#fff;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.win-card.on{border-color:var(--blue);background:#EEF2FF}
-.win-lbl{font-size:14px;font-weight:800}.win-sub{font-size:11px;color:var(--mu);margin-top:2px}
-.win-ico{font-size:20px}
-.window-ind{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:var(--rs);margin-bottom:12px;font-size:12px;font-weight:700}
-.wi-active{background:#ECFDF5;color:#059669;border:1px solid #BBF7D0}
-.wi-upcoming{background:#EEF2FF;color:var(--blue);border:1px solid #C7D7FF}
-.wi-inactive{background:var(--bg);color:var(--mu);border:1px solid var(--bdr)}
-.wi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.wi-dot-active{background:#059669;animation:pulse 2s infinite}
-.wi-dot-upcoming{background:var(--blue)}.wi-dot-off{background:var(--mu)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* OTP section */
+#otp-section{display:none;margin-top:0.5rem;}
+#otp-section.show{display:block;}
 
-/* ══ HOME ══ */
-#sh{background:var(--bg)}
-.h-hero{padding:52px 20px 20px;background:linear-gradient(160deg,#0A0F2C 0%,#1747F5 100%);color:#fff;flex-shrink:0}
-.h-wordmark{display:flex;align-items:baseline}
-.h-co{font-size:26px;font-weight:900;color:#fff}
-.h-uri{font-size:26px;font-weight:900;color:rgba(255,255,255,.55)}
-.h-tld{font-size:13px;font-weight:700;color:rgba(255,255,255,.35);margin-left:2px}
-.h-greet{font-size:12px;opacity:.65;margin-bottom:3px}.h-sub{font-size:12px;opacity:.6;margin-top:3px}
-.h-sb{flex:1;overflow-y:auto;padding:14px}.h-sb::-webkit-scrollbar{display:none}
-.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.hc{background:#fff;border-radius:18px;border:1.5px solid var(--bdr);padding:20px 14px;text-align:center;cursor:pointer;transition:all .2s}
-.hc:active{transform:scale(.97)}
-.hc.full{grid-column:span 2;display:flex;align-items:center;padding:16px 18px;text-align:left;gap:14px}
-.hc-ico{font-size:28px;margin-bottom:8px}
-.hc.full .hc-ico{font-size:32px;margin-bottom:0;flex-shrink:0}
-.hc-l{font-size:14px;font-weight:800}.hc-s{font-size:10px;color:var(--mu);margin-top:2px}
-.hc.full .hc-l{font-size:15px}
-.corridor-badge{background:linear-gradient(135deg,#0A0F2C,#1a2580);border-radius:var(--r);padding:16px;margin-bottom:12px;color:#fff}
-.pilot-chip{display:inline-block;background:rgba(255,255,255,.15);border-radius:99px;padding:3px 10px;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
-.corridor-route{font-size:18px;font-weight:900;margin-bottom:3px}
-.corridor-sub{font-size:11px;opacity:.65;line-height:1.5}
-.h-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.hs{background:#fff;border-radius:var(--rs);border:1px solid var(--bdr);padding:10px 8px;text-align:center}
-.hs-n{font-size:16px;font-weight:900;color:var(--blue)}.hs-l{font-size:10px;color:var(--mu);margin-top:1px}
+/* Buttons */
+.btn{width:100%;border:none;border-radius:var(--r);font-family:var(--font-d);font-weight:700;font-size:0.95rem;padding:0.9rem;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:var(--accent);color:#0d0f1a;}
+.btn-primary:hover{box-shadow:0 4px 20px rgba(200,255,0,0.3);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);box-shadow:none;}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);margin-top:0.5rem;}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);}
+.btn-danger{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
 
-/* ══ SENDER ══ */
-.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
-.cat-card{border-radius:var(--rs);border:2px solid var(--bdr);padding:13px 11px;cursor:pointer;transition:all .18s;background:#fff}
-.cat-card.on{border-color:var(--blue);background:#EEF2FF}
-.cat-ico{font-size:24px;margin-bottom:7px}.cat-name{font-size:13px;font-weight:800}
-.cat-sub{font-size:10px;color:var(--mu);margin-top:2px;line-height:1.4}
+.auth-terms{font-size:0.72rem;color:var(--muted);text-align:center;margin-top:0.75rem;line-height:1.5;}
+.auth-terms a{color:var(--text2);}
 
-/* ══ DIRECTION ══ */
-.dir-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.dir-card{border-radius:var(--rs);border:2px solid var(--bdr);padding:16px 10px;cursor:pointer;text-align:center;transition:all .18s;background:#fff}
-.dir-card.on{border-color:var(--blue);background:#EEF2FF}
-.dir-ico{font-size:26px;margin-bottom:6px}
-.dir-name{font-size:13px;font-weight:800}.dir-sub{font-size:10px;color:var(--mu);margin-top:2px;line-height:1.4}
+/* ============================================
+   APP SCREEN
+   ============================================ */
+#screen-app{background:#0d0f1a;}
 
-/* ══ TRACKING / CHAT ══ */
-.trk-sb{flex:1;overflow-y:auto;padding:16px}.trk-sb::-webkit-scrollbar{display:none}
-.eta-big{text-align:center;padding:14px;background:linear-gradient(135deg,#EEF2FF,#F0F4FF);border-radius:var(--r);margin-bottom:14px}
-.eta-lbl{font-size:12px;color:var(--mu);margin-bottom:3px}.eta-num{font-size:38px;font-weight:900;color:var(--blue)}
-.deliv-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--rs);margin-bottom:14px;font-size:13px;font-weight:700}
-.deliv-badge.window{background:#EEF2FF;color:var(--blue);border:1px solid #C7D7FF}
-.deliv-badge.flexible{background:#ECFDF5;color:#059669;border:1px solid #BBF7D0}
-.deliv-badge.priority{background:#FEF2F2;color:var(--bad);border:1px solid #FECACA}
-.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#F8F9FF}
-.chat-msgs::-webkit-scrollbar{display:none}
-.msg{display:flex;gap:8px;max-width:82%}
-.msg.mine{align-self:flex-end;flex-direction:row-reverse}
-.mav{width:30px;height:30px;border-radius:50%;background:var(--bg);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:var(--blue)}
-.mbub{padding:10px 13px;border-radius:16px;font-size:13.5px;line-height:1.5}
-.msg.mine .mbub{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
-.msg:not(.mine) .mbub{background:#fff;color:var(--tx);border-bottom-left-radius:4px;border:1px solid var(--bdr)}
-.mtime{font-size:10px;color:var(--mu);margin-top:3px;text-align:right}
-.chat-ir{padding:10px 14px 28px;background:#fff;border-top:1px solid var(--bdr);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
-.ci{flex:1;padding:10px 14px;border-radius:22px;border:1.5px solid var(--bdr);font-family:'Outfit',sans-serif;font-size:14px;outline:none;resize:none;max-height:90px}
-.ci:focus{border-color:var(--blue)}
-.csend{width:40px;height:40px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+/* Header */
+.app-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+  background:rgba(13,15,26,0.95);backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:50;
+}
+.h-logo{font-family:var(--font-d);font-weight:800;font-size:1.3rem;letter-spacing:-0.03em;color:var(--accent);}
+.h-logo span{color:var(--text);}
+.h-right{display:flex;align-items:center;gap:0.6rem;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.status-dot.off{background:var(--muted);}
+.corridor-pill{background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.68rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:0.3rem 0.7rem;border-radius:100px;}
 
-/* ══ ABOUT ══ */
-#sab{background:#fff;overflow:hidden}
-.ab-sb{flex:1;overflow-y:auto}.ab-sb::-webkit-scrollbar{display:none}
-.ab-hero{background:linear-gradient(160deg,#0A0F2C 0%,#1747F5 100%);padding:52px 24px 28px;color:#fff}
-.ab-eyebrow{font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;opacity:.6;margin-bottom:10px}
-.ab-h{font-size:24px;font-weight:900;line-height:1.25;margin-bottom:10px}
-.ab-sub{font-size:13px;opacity:.7;line-height:1.6}
-.ab-map-strip{background:rgba(255,255,255,.08);border-radius:var(--rs);padding:12px 14px;margin-top:18px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700}
-.ab-sec{padding:22px 22px 0}
-.ab-sec-t{font-size:18px;font-weight:900;margin-bottom:10px;color:var(--tx)}
-.ab-sec-p{font-size:14px;color:var(--mu);line-height:1.75;margin-bottom:10px}
-.ab-div{height:1px;background:var(--bdr);margin:18px 0}
-.ev-row{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
-.ev-ico{width:40px;height:40px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.ev-t{font-size:14px;font-weight:800;margin-bottom:2px}.ev-s{font-size:12px;color:var(--mu);line-height:1.5}
-.phase-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
-.phase-num{min-width:56px;text-align:center;padding:6px 10px;border-radius:var(--rs);font-size:10px;font-weight:800;text-transform:uppercase;flex-shrink:0}
-.phase-now{background:var(--blue);color:#fff}.phase-next{background:#EEF2FF;color:var(--blue)}.phase-later{background:var(--bg);color:var(--mu)}
-.phase-t{font-size:13px;font-weight:700;margin-bottom:2px}.phase-s{font-size:12px;color:var(--mu);line-height:1.5}
-@media(min-width:430px){#app{border-left:1px solid rgba(0,0,0,.08);border-right:1px solid rgba(0,0,0,.08)}}
+/* Hero */
+.app-hero{padding:1.75rem 1.25rem 1rem;}
+.live-tag{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent-d);border:1px solid var(--accent-b);color:var(--accent);font-size:0.68rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;padding:0.35rem 0.9rem;border-radius:100px;margin-bottom:1rem;}
+.live-tag::before{content:'';width:5px;height:5px;background:var(--accent);border-radius:50%;animation:blink 2s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.hero-name{font-family:var(--font-d);font-weight:800;font-size:1.65rem;letter-spacing:-0.03em;margin-bottom:0.2rem;}
+.hero-sub{font-size:0.82rem;color:var(--text2);margin-bottom:1.25rem;}
+
+/* Window card */
+.window-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;}
+.wc-label{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;}
+.wc-status{font-family:var(--font-d);font-weight:700;font-size:0.95rem;}
+.wc-status.open{color:var(--green);}
+.wc-status.closed{color:var(--muted);}
+.wc-next{font-size:0.75rem;color:var(--text2);margin-top:0.15rem;}
+.wc-icon{font-size:2rem;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:0.9rem;text-align:center;}
+.stat-v{font-family:var(--font-d);font-weight:800;font-size:1.5rem;color:var(--accent);line-height:1;margin-bottom:0.2rem;}
+.stat-l{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+
+/* Active banner */
+.active-banner{margin:0 1.25rem 1rem;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:var(--r);padding:1rem 1.25rem;cursor:pointer;display:none;}
+.active-banner.show{display:block;}
+.ab-tag{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.35rem;}
+.ab-route{font-family:var(--font-d);font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;}
+.ab-sub{font-size:0.78rem;color:var(--text2);}
+
+/* Action cards */
+.action-cards{padding:0 1.25rem 1.5rem;display:flex;flex-direction:column;gap:0.75rem;}
+.action-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1rem;transition:all 0.2s;user-select:none;}
+.action-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.action-card:active{transform:translateY(0);opacity:0.9;}
+.action-card.primary{border-color:var(--accent-b);background:var(--accent-d);}
+.action-card.primary:hover{border-color:rgba(200,255,0,0.45);}
+.ac-left{display:flex;align-items:center;gap:1rem;}
+.ac-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;background:var(--surface2);}
+.action-card.primary .ac-icon{background:rgba(200,255,0,0.15);}
+.ac-title{font-family:var(--font-d);font-weight:700;font-size:1rem;margin-bottom:0.15rem;}
+.ac-desc{font-size:0.8rem;color:var(--text2);}
+.ac-arrow{color:var(--muted);font-size:1.3rem;flex-shrink:0;}
+.action-card.primary .ac-arrow{color:var(--accent);}
+
+/* Footer nav */
+.footer-nav{margin-top:auto;border-top:1px solid var(--border);padding:0.75rem 1.5rem;display:flex;justify-content:space-around;align-items:center;}
+.fn-item{display:flex;flex-direction:column;align-items:center;gap:0.2rem;font-size:0.65rem;color:var(--muted);cursor:pointer;background:none;border:none;padding:0.4rem 0.6rem;transition:color 0.2s;}
+.fn-item.active{color:var(--accent);}
+.fn-item .fi-icon{font-size:1.2rem;}
+.fn-signout{font-size:0.75rem;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--font-b);padding:0.4rem;transition:color 0.2s;}
+.fn-signout:hover{color:var(--red);}
+
+/* ============================================
+   PANELS (slide-up sheets)
+   ============================================ */
+.panel-overlay{position:fixed;inset:0;z-index:200;display:none;align-items:flex-end;}
+.panel-overlay.open{display:flex;}
+.panel-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);}
+.panel{
+  position:relative;z-index:1;background:var(--surface);
+  border-radius:20px 20px 0 0;border-top:1px solid var(--border);
+  width:100%;max-height:92vh;overflow-y:auto;padding:0 1.25rem 2.5rem;
+  animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.panel-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0.75rem auto 1.5rem;}
+.panel-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;}
+.panel-back{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;flex-shrink:0;color:var(--text);transition:background 0.2s;}
+.panel-back:hover{background:var(--surface3);}
+.panel-title{font-family:var(--font-d);font-weight:700;font-size:1.1rem;}
+.step-label{font-size:0.7rem;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+/* Panel form elements */
+.fg{margin-bottom:1.25rem;}
+.fl{display:block;font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
+.fi{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:0.95rem;padding:0.8rem 1rem;width:100%;outline:none;transition:border-color 0.2s;}
+.fi:focus{border-color:rgba(200,255,0,0.4);}
+.fi::placeholder{color:var(--muted);}
+.fsel{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:0.95rem;padding:0.8rem 1rem;width:100%;outline:none;-webkit-appearance:none;}
+
+/* Option grid */
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.opt-btn{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);padding:0.9rem 0.75rem;cursor:pointer;font-family:var(--font-b);font-size:0.85rem;text-align:center;transition:all 0.15s;line-height:1.4;}
+.opt-btn small{display:block;color:var(--muted);font-size:0.72rem;margin-top:0.2rem;}
+.opt-btn.sel{background:var(--accent-d);border-color:var(--accent-b);color:var(--accent);}
+.opt-btn.sel small{color:rgba(200,255,0,0.6);}
+
+/* Notice */
+.notice{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:0.85rem 1rem;font-size:0.82rem;color:var(--text2);margin-bottom:1.25rem;line-height:1.5;}
+.notice.warn{background:rgba(255,107,53,0.08);border-color:rgba(255,107,53,0.2);color:#ffb899;}
+.notice strong{color:var(--text);}
+
+/* Price comparison */
+.price-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;overflow:hidden;}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;}
+.price-row:last-child{border-bottom:none;}
+.pr-label{color:var(--text2);}
+.pr-val{font-family:var(--font-d);font-weight:700;}
+.pr-val.accent{color:var(--accent);}
+.pr-val.strike{color:var(--muted);text-decoration:line-through;}
+
+/* Speed cards */
+.speed-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1rem;cursor:pointer;transition:all 0.15s;margin-bottom:0.6rem;}
+.speed-card.sel{background:var(--accent-d);border-color:var(--accent-b);}
+.sc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;}
+.sc-name{font-weight:500;font-size:0.9rem;}
+.sc-badge{font-size:0.68rem;padding:0.2rem 0.5rem;border-radius:100px;font-weight:500;}
+.sc-badge.save{background:rgba(74,222,128,0.15);color:var(--green);}
+.sc-badge.earn{background:var(--accent-d);color:var(--accent);}
+.sc-badge.std{background:var(--surface2);color:var(--text2);}
+.sc-desc{font-size:0.78rem;color:var(--text2);}
+
+/* Counter */
+.counter-row{display:flex;align-items:center;gap:1rem;}
+.counter-btn{width:38px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.counter-btn:hover{background:var(--surface3);}
+.counter-val{font-family:var(--font-d);font-weight:700;font-size:1.2rem;min-width:2rem;text-align:center;}
+
+/* Payout display */
+.payout-bar{background:var(--accent-d);border:1px solid var(--accent-b);border-radius:var(--r);padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+.pb-label{font-size:0.78rem;color:var(--text2);}
+.pb-sub{font-size:0.7rem;color:rgba(200,255,0,0.5);margin-top:0.15rem;}
+.pb-amount{font-family:var(--font-d);font-weight:800;font-size:2rem;color:var(--accent);}
+
+/* Driver card */
+.driver-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1.25rem;}
+.dc-top{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;}
+.dc-avatar{width:48px;height:48px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;font-size:1rem;color:var(--accent);flex-shrink:0;}
+.dc-name{font-weight:500;margin-bottom:0.2rem;}
+.dc-stars{font-size:0.78rem;color:var(--text2);}
+.dc-meta{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.dc-meta-item{background:var(--surface);border-radius:8px;padding:0.6rem;}
+.dc-ml{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.2rem;}
+.dc-mv{font-size:0.85rem;font-weight:500;}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column;}
+.tl-item{display:grid;grid-template-columns:20px 1fr;gap:1rem;padding-bottom:1.5rem;position:relative;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:9px;top:20px;bottom:0;width:2px;background:var(--border);}
+.tl-dot{width:20px;height:20px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);position:relative;z-index:1;flex-shrink:0;}
+.tl-dot.done{background:var(--green);border-color:var(--green);}
+.tl-dot.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px rgba(200,255,0,0.15);animation:pulse-dot 2s ease infinite;}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(200,255,0,0.3);}50%{box-shadow:0 0 0 6px rgba(200,255,0,0);}}
+.tl-time{font-size:0.7rem;color:var(--muted);margin-bottom:0.15rem;font-variant-numeric:tabular-nums;}
+.tl-label{font-weight:500;font-size:0.9rem;margin-bottom:0.1rem;}
+.tl-desc{font-size:0.78rem;color:var(--text2);}
+
+/* About */
+.about-section{margin-bottom:2rem;}
+.about-section h3{font-family:var(--font-d);font-weight:700;font-size:1rem;margin-bottom:0.75rem;}
+.exp-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:0.6rem;display:grid;grid-template-columns:auto 1fr;gap:0.75rem;align-items:center;}
+.exp-badge{font-size:0.65rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.25rem 0.6rem;border-radius:100px;white-space:nowrap;}
+.exp-badge.now{background:var(--accent-d);color:var(--accent);border:1px solid var(--accent-b);}
+.exp-badge.next{background:rgba(123,97,255,0.1);color:var(--purple);border:1px solid rgba(123,97,255,0.2);}
+.exp-badge.later{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.exp-text strong{display:block;font-size:0.88rem;margin-bottom:0.2rem;}
+.exp-text span{font-size:0.78rem;color:var(--text2);}
+
+/* ============================================
+   ADDRESS AUTOCOMPLETE
+   ============================================ */
+.ac-wrap{position:relative;}
+.ac-field{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);transition:border-color 0.2s;overflow:visible;}
+.ac-field:focus-within{border-color:rgba(200,255,0,0.4);}
+.ac-pfx{padding:0 0.6rem 0 1rem;font-size:1rem;flex-shrink:0;line-height:1;}
+.ac-input{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--font-b);font-size:0.95rem;padding:0.85rem 1rem 0.85rem 0;outline:none;}
+.ac-input::placeholder{color:var(--muted);}
+.ac-clear{padding:0 0.75rem;color:var(--muted);cursor:pointer;font-size:0.9rem;display:none;}
+.ac-clear.show{display:block;}
+
+.ac-dropdown{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;
+  background:#1a1f38;border:1px solid var(--border2);border-radius:var(--r);
+  z-index:500;display:none;box-shadow:0 12px 40px rgba(0,0,0,0.6);overflow:hidden;
+}
+.ac-dropdown.open{display:block;}
+.ac-item{display:flex;align-items:flex-start;gap:0.75rem;padding:0.85rem 1rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.1s;}
+.ac-item:last-child{border-bottom:none;}
+.ac-item:hover,.ac-item.hl{background:var(--surface2);}
+.ac-pin{font-size:0.9rem;flex-shrink:0;margin-top:2px;}
+.ac-main{font-size:0.88rem;color:var(--text);margin-bottom:0.1rem;line-height:1.3;}
+.ac-main b{color:var(--accent);font-weight:500;}
+.ac-sec{font-size:0.73rem;color:var(--muted);}
+.ac-powered{padding:0.4rem 1rem;font-size:0.65rem;color:var(--muted);text-align:right;background:var(--bg2);border-top:1px solid var(--border);}
+.ac-loading{padding:0.85rem 1rem;font-size:0.82rem;color:var(--muted);text-align:center;}
+
+/* Quick-pick chips */
+.chips{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem;}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:100px;color:var(--text2);font-size:0.72rem;padding:0.3rem 0.75rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;user-select:none;}
+.chip:hover{border-color:var(--accent-b);color:var(--accent);background:var(--accent-d);}
+.chip.sel{border-color:var(--accent-b);color:var(--accent);background:var(--accent-d);}
 </style>
 </head>
 <body>
-<div id="app">
-<div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════
-     AUTH — with sign in/sign up + OTP
-══════════════════════════════════════ -->
-<div class="screen" id="sa">
-  <div class="auth-w">
-    <div style="margin-bottom:18px;width:100%;text-align:center">
-      <div class="cr-mark"><div class="cr-mark-inner"><span class="cr-c">C</span><span class="cr-r">R</span></div><div class="cr-sub-mark">couride</div></div>
-      <div class="auth-brand">couride</div>
-      <div style="font-size:11px;color:var(--mu);margin-top:5px"><span style="color:var(--blue);font-weight:700">Pilot:</span> Surrey / Abbotsford ↔ North Shore</div>
+<!-- ============================================
+     AUTH SCREEN
+     ============================================ -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-wrap">
+
+    <div class="auth-logo">
+      <div class="auth-logo-mark">CR</div>
+      <h1>couride</h1>
+      <div class="pilot-tag">Pilot: Surrey / Abbotsford ↔ North Shore</div>
     </div>
-    <!-- SIGN IN / SIGN UP toggle -->
-    <div class="seg" style="width:100%;margin-bottom:16px">
-      <button class="seg-b on" id="auth-tab-in" onclick="switchAuthTab('in')">Sign In</button>
-      <button class="seg-b" id="auth-tab-up" onclick="switchAuthTab('up')">Sign Up</button>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
     </div>
-    <div id="auth-signup-note" style="display:none;width:100%;background:#ECFDF5;border:1px solid #BBF7D0;border-radius:var(--rs);padding:10px 13px;font-size:12px;color:#059669;margin-bottom:12px">
-      🎉 New to Couride? Create your account below. Pilot access is free.
-    </div>
-    <!-- Google — primary -->
-    <button class="btn auth-social" onclick="googleSignIn()" style="width:100%;margin-bottom:9px">
-      <svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#4285F4" d="M43.6 20.5h-1.6V20H24v8h11.3C33.6 32.5 29.2 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.8l5.7-5.7C33.5 7.3 28.9 5 24 5 13 5 4 14 4 24s9 19 20 19c11.1 0 20-9 20-19 0-1.2-.1-2.4-.4-3.5z"/><path fill="#34A853" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c2.8 0 5.3 1 7.2 2.8l5.7-5.7C33.5 7.3 28.9 5 24 5c-7.6 0-14.1 4.3-17.7 9.7z"/><path fill="#FBBC04" d="M24 43c4.8 0 9.2-1.8 12.5-4.6l-6.1-5.1C28.6 34.4 26.4 35 24 35c-5.1 0-9.5-3.4-11.1-8.2l-6.6 5.1C9.8 38.6 16.4 43 24 43z"/><path fill="#EA4335" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.4l6.1 5.1C43 34.9 44 29.8 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+
+    <div class="alert error" id="alert-error"></div>
+    <div class="alert success" id="alert-success"></div>
+    <div class="alert info" id="alert-info"></div>
+
+    <!-- Google OAuth -->
+    <button class="oauth-btn" id="btn-google" onclick="googleAuth()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.706c-.18-.54-.282-1.117-.282-1.706s.102-1.166.282-1.706V4.962H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
       Continue with Google
     </button>
-    <!-- Apple -->
-    <button class="btn auth-social auth-apple" onclick="appleSignIn()" style="width:100%;margin-bottom:9px">
-      <svg width="17" height="17" viewBox="0 0 814 1000" fill="currentColor" style="flex-shrink:0"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76.5 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.8 0 319.5 0 265.6c0-101.5 57.8-175.3 120.3-175.3 66.7 0 107 43.5 164 43.5 48 0 97.1-43.5 164-43.5 79.2 0 153.1 65.2 179.1 132.3z"/><path d="M432 53.2C403.8 23.7 370.8 0 329.8 0c-5.8 0-11.6.6-17.4 1.9 1.3 42.8 20.7 86.3 46.4 114.4 24.4 26.9 60.9 49 100.7 49 5.2 0 10.3-.6 15.5-1.9-1.3-40.2-21.9-80.3-43-110.2z"/></svg>
-      Continue with Apple
-    </button>
-    <!-- Social row: Facebook + X -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;margin-bottom:12px">
-      <button class="btn auth-social auth-fb" onclick="facebookSignIn()">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="#1877F2" style="flex-shrink:0"><path d="M24 12c0-6.627-5.373-12-12-12S0 5.373 0 12c0 5.99 4.388 10.954 10.125 11.854V15.47H7.078V12h3.047V9.356c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874V12h3.328l-.532 3.469h-2.796v8.385C19.612 22.954 24 17.99 24 12z"/></svg>
-        Facebook
-      </button>
-      <button class="btn auth-social auth-x" onclick="xSignIn()">
-        <svg width="15" height="15" viewBox="0 0 300 300" fill="currentColor" style="flex-shrink:0"><path d="M178.57 127.15 290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59H300L178.57 127.15zm-36.32 41.31-11.87-16.57L36.32 19.48h40.65l76.18 106.37 11.87 16.57 99.05 138.37h-40.65l-80.17-111.93z"/></svg>
-        X / Twitter
-      </button>
+
+    <div class="divider">or</div>
+
+    <!-- Email auth -->
+    <div class="input-row">
+      <span class="icon">📧</span>
+      <input type="email" id="in-email" placeholder="Email address" autocomplete="email" inputmode="email"/>
     </div>
-    <div class="auth-div">or</div>
-    <!-- Email -->
-    <div style="width:100%;margin-bottom:9px">
-      <div class="inp-icon" style="margin-bottom:8px"><span class="iico">📧</span><input class="inp" type="email" id="auth-email" placeholder="Email address"></div>
-      <button class="btn bp" onclick="emailSignIn()"><span id="auth-email-btn-label">Continue with Email</span></button>
+    <div class="input-row" id="row-password">
+      <span class="icon">🔒</span>
+      <input type="password" id="in-password" placeholder="Password" autocomplete="current-password"/>
     </div>
-    <div class="auth-div">or</div>
-    <!-- Mobile Number -->
-    <div style="width:100%" id="phone-section">
-      <div class="inp-icon" style="margin-bottom:8px"><span class="iico">📱</span><input class="inp" type="tel" id="auth-phone" placeholder="+1 604 555-0100"></div>
-      <button class="btn bs" onclick="phoneSignIn()" id="send-otp-btn">Send Verification Code</button>
-      <!-- OTP field — hidden until code sent -->
-      <div id="otp-section" style="display:none;margin-top:10px" class="otp-section">
-        <div style="font-size:12px;color:var(--mu);margin-bottom:8px;text-align:center">Enter the 6-digit code sent to your phone</div>
-        <div class="inp-icon" style="margin-bottom:8px"><span class="iico">🔐</span><input class="inp" type="number" id="auth-otp" placeholder="123456" maxlength="6" style="letter-spacing:6px;font-size:18px;font-weight:800;text-align:center"></div>
-        <button class="btn bp" onclick="verifyOtp()">Verify &amp; Continue →</button>
-        <div style="font-size:11px;color:var(--mu);text-align:center;margin-top:8px;cursor:pointer" onclick="phoneSignIn()">Resend code</div>
+    <button class="btn btn-primary" id="btn-email" onclick="emailAuth()">Continue with Email</button>
+
+    <!-- OTP section -->
+    <div id="otp-section">
+      <div style="height:0.75rem"></div>
+      <div class="input-row">
+        <span class="icon">🔐</span>
+        <input type="text" id="in-otp" placeholder="6-digit code" maxlength="6" pattern="\d{6}" inputmode="numeric"/>
+      </div>
+      <button class="btn btn-primary" onclick="verifyEmailOTP()">Verify Code →</button>
+      <button class="btn btn-ghost" onclick="emailAuth()">Resend code</button>
+    </div>
+
+    <div class="divider">or</div>
+
+    <!-- Phone auth -->
+    <div class="input-row">
+      <span class="icon">📱</span>
+      <input type="tel" id="in-phone" placeholder="+1 604 555-0100" autocomplete="tel" inputmode="tel"/>
+    </div>
+    <button class="btn btn-primary" id="btn-phone" onclick="phoneAuth()">Send Verification Code</button>
+    <div id="phone-otp-section" style="display:none;margin-top:0.75rem;">
+      <div class="input-row">
+        <span class="icon">🔐</span>
+        <input type="text" id="in-phone-otp" placeholder="6-digit code" maxlength="6" inputmode="numeric"/>
+      </div>
+      <button class="btn btn-primary" onclick="verifyPhoneOTP()">Verify & Continue →</button>
+      <button class="btn btn-ghost" onclick="phoneAuth()">Resend code</button>
+    </div>
+
+    <p class="auth-terms">By continuing you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a></p>
+  </div>
+</div>
+
+<!-- ============================================
+     APP SCREEN
+     ============================================ -->
+<div class="screen" id="screen-app">
+  <div class="app-header">
+    <div class="h-logo">Cou<span>ride</span></div>
+    <div class="h-right">
+      <div class="status-dot" id="status-dot"></div>
+      <div class="corridor-pill">Surrey ↔ N.Shore</div>
+    </div>
+  </div>
+
+  <div class="app-hero">
+    <div class="live-tag">Corridor Pilot Active</div>
+    <div class="hero-name" id="hero-name">Hey there 👋</div>
+    <div class="hero-sub">couride.co · Surrey/Abbotsford ↔ North Shore · Weekdays</div>
+
+    <div class="window-card">
+      <div>
+        <div class="wc-label">Pilot corridor</div>
+        <div class="wc-status" id="wc-status">Checking...</div>
+        <div class="wc-next" id="wc-next">Loading...</div>
+      </div>
+      <div class="wc-icon" id="wc-icon">🔄</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-v">28</div><div class="stat-l">Drivers this week</div></div>
+      <div class="stat-card"><div class="stat-v">14</div><div class="stat-l">Open seats today</div></div>
+      <div class="stat-card"><div class="stat-v">6</div><div class="stat-l">Parcels queued</div></div>
+    </div>
+  </div>
+
+  <div class="active-banner show" id="active-banner" onclick="openPanel('tracking')">
+    <div class="ab-tag">📦 Active Parcel · In Transit</div>
+    <div class="ab-route">Surrey → Burnaby Intercept · North Vancouver</div>
+    <div class="ab-sub">Tap to track live →</div>
+  </div>
+
+  <div class="action-cards">
+    <div class="action-card primary" onclick="openPanel('ride')">
+      <div class="ac-left">
+        <div class="ac-icon">🚗</div>
+        <div><div class="ac-title">Book a Commute Seat</div><div class="ac-desc">Ride with someone already going</div></div>
+      </div>
+      <div class="ac-arrow">›</div>
+    </div>
+    <div class="action-card" onclick="openPanel('parcel')">
+      <div class="ac-left">
+        <div class="ac-icon">📦</div>
+        <div><div class="ac-title">Send a Corridor Parcel</div><div class="ac-desc">Small items on existing trips</div></div>
+      </div>
+      <div class="ac-arrow">›</div>
+    </div>
+    <div class="action-card" onclick="openPanel('driver')">
+      <div class="ac-left">
+        <div class="ac-icon">🗺️</div>
+        <div><div class="ac-title">Drive This Route</div><div class="ac-desc">Register your commute · Earn fuel money</div></div>
+      </div>
+      <div class="ac-arrow">›</div>
+    </div>
+  </div>
+
+  <div class="footer-nav">
+    <button class="fn-item active"><span class="fi-icon">🏠</span><span>Home</span></button>
+    <button class="fn-item" onclick="openPanel('about')"><span class="fi-icon">ℹ️</span><span>About</span></button>
+    <button class="fn-signout" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<!-- ============================================
+     PANEL: RIDE BOOKING
+     ============================================ -->
+<div class="panel-overlay" id="panel-ride">
+  <div class="panel-backdrop" onclick="closePanel('ride')"></div>
+  <div class="panel">
+    <div class="panel-handle"></div>
+    <div class="panel-head">
+      <div class="panel-back" onclick="closePanel('ride')">←</div>
+      <div class="panel-title">Book a Commute Seat</div>
+      <div class="step-label">Step 1 of 3</div>
+    </div>
+    <div class="notice">🚗 <strong>Not ride-hail.</strong> Matched with someone already driving this corridor — cheaper, greener, smarter.</div>
+    <div class="fg">
+      <label class="fl">Direction</label>
+      <div class="opt-grid">
+        <div class="opt-btn" onclick="selOpt(this,'r-dir')">🌅→ Westbound<small>Toward North Shore</small></div>
+        <div class="opt-btn" onclick="selOpt(this,'r-dir')">←🌆 Eastbound<small>Toward Surrey</small></div>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--mu);margin-top:18px;text-align:center;line-height:1.6">By continuing you agree to our <span style="color:var(--blue);font-weight:700">Terms</span> &amp; <span style="color:var(--blue);font-weight:700">Privacy Policy</span></div>
-  </div>
-</div>
-
-<!-- ══ HOME ══ -->
-<div class="screen" id="sh">
-  <div class="h-hero">
-    <div class="h-greet">Hey, <span id="home-name">there</span> 👋</div>
-    <div class="h-wordmark"><span class="h-co">cou</span><span class="h-uri">ride</span><span class="h-tld">.co</span></div>
-    <div class="h-sub">Surrey / Abbotsford ↔ North Shore · Weekdays only</div>
-  </div>
-  <div class="h-sb">
-    <div style="height:10px"></div>
-    <div class="window-ind" id="home-window-ind"><div class="wi-dot wi-dot-off"></div><span>Loading window status…</span></div>
-    <div class="corridor-badge">
-      <div class="pilot-chip">PILOT CORRIDOR</div>
-      <div class="corridor-route">Surrey / Abbotsford → North Shore</div>
-      <div class="corridor-sub">Using people <em>already driving</em> this route.<br>Weekdays · 6:30–8:30 AM outbound · 2:30–5:30 PM return</div>
-    </div>
-    <div class="hgrid">
-      <div class="hc" onclick="go('sp1')"><div class="hc-ico">🚗</div><div class="hc-l">Book a Commute Seat</div><div class="hc-s">Ride with someone already going</div></div>
-      <div class="hc" onclick="go('ss1')"><div class="hc-ico">📦</div><div class="hc-l">Send a Corridor Parcel</div><div class="hc-s">Small items on existing trips</div></div>
-      <div class="hc full" onclick="go('st1')"><div class="hc-ico">🗺️</div><div><div class="hc-l">Drive This Route</div><div class="hc-s">Register your regular commute · Carry riders or parcels · Earn fuel money</div></div><div style="margin-left:auto;color:var(--mu);font-size:20px">›</div></div>
-    </div>
-    <div class="h-stats">
-      <div class="hs"><div class="hs-n">28</div><div class="hs-l">Drivers this week</div></div>
-      <div class="hs"><div class="hs-n">14</div><div class="hs-l">Open seats today</div></div>
-      <div class="hs"><div class="hs-n">6</div><div class="hs-l">Parcels queued</div></div>
-    </div>
-    <div class="card" style="background:linear-gradient(135deg,#EEF2FF,#F0F4FF);border-color:#D0D9FF;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-weight:800;font-size:14px">Active Parcel</div><span class="tag tg">In Transit</span></div>
-      <div class="rp"><div class="rdot"></div><div class="rt">Surrey → Burnaby Intercept</div></div>
-      <div class="rp"><div class="rdot e"></div><div class="rt">North Vancouver</div></div>
-      <button class="btn bp btn-sm" style="margin-top:10px" onclick="go('stk')">Track Live →</button>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <button onclick="go('sab')" style="font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:700">About this pilot</button>
-      <button onclick="signOut()" style="font-size:12px;color:var(--mu);background:none;border:none;cursor:pointer">Sign out</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ SENDER 1 ══ -->
-<div class="screen" id="ss1">
-  <div class="hdr"><button class="back" onclick="go('sh')">←</button><div class="hdr-t">Send a Corridor Parcel</div><div class="hdr-s">🛣️ PILOT</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div></div>
-    <div class="corridor-warn"><div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:3px">⚠️ Pilot parcel limits</div><div style="font-size:11px;color:#92400E;line-height:1.6">Small, non-fragile items only. No restricted goods, liquids, or items over 5 kg. Carried by commuters — not a dedicated courier.</div></div>
-    <div class="lbl">What are you sending?</div>
-    <div class="cat-grid" id="cat-grid"></div>
-    <div class="lbl">From stop</div>
-    <div id="s-origin-stops" class="stop-list"></div>
-    <div class="lbl">To stop</div>
-    <div id="s-dest-stops" class="stop-list"></div>
-    <div class="lbl">Commute window</div>
-    <div id="s-windows"></div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="sNext1()">Set Speed &amp; Price →</button></div>
-</div>
-
-<!-- ══ SENDER 2 ══ -->
-<div class="screen" id="ss2">
-  <div class="hdr"><button class="back" onclick="go('ss1')">←</button><div class="hdr-t">Speed &amp; Price</div><div class="hdr-s">2 of 4</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd"></div><div class="sd"></div></div>
-    <div class="card" style="background:linear-gradient(135deg,#EEF2FF,#F4F6FF);border-color:#D0D9FF;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--mu);margin-bottom:6px">Corridor Route</div>
-      <div class="rp" style="margin-bottom:4px"><div class="rdot"></div><div class="rt" id="s2-from">—</div></div>
-      <div class="rp"><div class="rdot e"></div><div class="rt" id="s2-to">—</div></div>
-      <div style="margin-top:8px;font-size:11px;color:var(--mu)">Category: <span id="s2-cat" style="font-weight:700;color:var(--tx)">—</span> · Distance: <span id="s2-dist" style="font-weight:700;color:var(--tx)">—</span></div>
-    </div>
-    <div style="background:#ECFDF5;border:1px solid #BBF7D0;border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#059669;font-weight:700">💚 Purolator: $<span id="c-puro">—</span> · FedEx: $<span id="c-fedex">—</span> · <span style="color:var(--blue)">couride: from $<span id="c-us">—</span></span></div>
-    <div class="lbl">Delivery speed</div>
-    <div class="tgrid" id="tgrid"></div>
-    <div id="price-breakdown" style="display:none"></div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="go('ss3')">Continue →</button></div>
-</div>
-
-<!-- ══ SENDER 3 ══ -->
-<div class="screen" id="ss3">
-  <div class="hdr"><button class="back" onclick="go('ss2')">←</button><div class="hdr-t">Recipient Details</div><div class="hdr-s">3 of 4</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd on"></div><div class="sd"></div></div>
-    <div class="lbl">Recipient name</div>
-    <div class="inp-icon" style="margin-bottom:12px"><span class="iico">👤</span><input class="inp" id="s-recip" placeholder="e.g. Sarah K."></div>
-    <div class="lbl">Recipient phone</div>
-    <div class="inp-icon" style="margin-bottom:12px"><span class="iico">📱</span><input class="inp" id="s-phone" type="tel" placeholder="+1 604 555-0100"></div>
-    <div class="lbl">Special instructions (optional)</div>
-    <textarea class="ta" id="s-notes" rows="3" placeholder="Handle with care, leave at reception…"></textarea>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="sNext3()">Review &amp; Pay →</button></div>
-</div>
-
-<!-- ══ SENDER 4 ══ -->
-<div class="screen" id="ss4">
-  <div class="hdr"><button class="back" onclick="go('ss3')">←</button><div class="hdr-t">Confirm &amp; Pay</div><div class="hdr-s">4 of 4</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd on"></div><div class="sd on"></div></div>
-    <div class="card"><div class="lbl">Corridor Route</div><div class="rp"><div class="rdot"></div><div class="rt" id="s4-from">—</div></div><div class="rp"><div class="rdot e"></div><div class="rt" id="s4-to">—</div></div><div style="margin-top:8px;font-size:12px;color:var(--mu)">Category: <span id="s4-cat" style="font-weight:700;color:var(--tx)">—</span> · Window: <span id="s4-win" style="font-weight:700;color:var(--tx)">—</span></div></div>
-    <div class="card"><div class="lbl">Recipient</div><div style="font-size:14px;font-weight:700" id="s4-recip">—</div></div>
-    <div id="s4-receipt"></div>
-    <div class="card"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:22px">💳</span><div><div style="font-weight:700;font-size:14px">Visa •••• 4242</div><div style="font-size:11px;color:var(--mu)">Exp 12/27</div></div><div style="margin-left:auto;color:var(--mu)">›</div></div></div>
-  </div>
-  <div class="bot"><button class="btn bp" id="s4-btn" onclick="submitSender()">🚀 Send Parcel · <span id="s4-btn-t">$0</span></button></div>
-</div>
-
-<!-- ══ RIDER 1 — Stop sequence + corridor map + custom time ══ -->
-<div class="screen" id="sp1">
-  <div class="hdr"><button class="back" onclick="go('sh')">←</button><div class="hdr-t">Book a Commute Seat</div><div class="hdr-s">🛣️ PILOT</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd"></div><div class="sd"></div></div>
-    <div class="card" style="background:#ECFDF5;border-color:#BBF7D0;margin-bottom:14px">
-      <div style="font-size:13px;font-weight:700;color:#059669;margin-bottom:3px">🚗 Not ride-hail. Commute matching.</div>
-      <div style="font-size:12px;color:var(--mu);line-height:1.6">Matched with someone <strong>already driving</strong> this corridor. Not dispatched for you. Cheaper, greener, smarter.</div>
-    </div>
-    <!-- DIRECTION -->
-    <div class="lbl">Direction</div>
-    <div class="dir-toggle">
-      <div class="dir-card on" id="pdir-west" onclick="selRiderDir('westbound')">
-        <div class="dir-ico">🌅→</div>
-        <div class="dir-name">Westbound</div>
-        <div class="dir-sub">Toward North Shore / North Van</div>
+    <div class="fg">
+      <label class="fl">Pickup Address</label>
+      <div class="ac-wrap">
+        <div class="ac-field">
+          <span class="ac-pfx">📍</span>
+          <input class="ac-input" id="ac-ride-from" placeholder="Surrey Central, Guildford, Abbotsford…" autocomplete="off" oninput="acSearch('ride-from',this.value)"/>
+          <span class="ac-clear" id="ac-clear-ride-from" onclick="acClear('ride-from')">✕</span>
+        </div>
+        <div class="ac-dropdown" id="acd-ride-from"></div>
       </div>
-      <div class="dir-card" id="pdir-east" onclick="selRiderDir('eastbound')">
-        <div class="dir-ico">←🌆</div>
-        <div class="dir-name">Eastbound</div>
-        <div class="dir-sub">Toward Surrey / Abbotsford</div>
+      <div class="chips">
+        <div class="chip" onclick="acSet('ride-from','Surrey Central Station, Surrey, BC')">Surrey Central</div>
+        <div class="chip" onclick="acSet('ride-from','Guildford Town Centre, Surrey, BC')">Guildford</div>
+        <div class="chip" onclick="acSet('ride-from','Downtown Abbotsford, BC')">Abbotsford</div>
+        <div class="chip" onclick="acSet('ride-from','Langley City, BC')">Langley</div>
       </div>
     </div>
-    <!-- CORRIDOR MAP -->
-    <div class="corridor-map-wrap">
-      <div class="corr-node"><div class="corr-node-dot"></div><div class="corr-node-lbl">Surrey /<br>Abbotsford</div></div>
-      <div class="corr-track">
-        <div class="corr-mid-node"><div class="corr-mid-dot"></div><div class="corr-mid-lbl">Burnaby /<br>Coq.</div></div>
-        <div class="corr-arrow-track"><div class="corr-arrow" id="corr-arrow">→</div></div>
+    <div class="fg">
+      <label class="fl">Dropoff Address</label>
+      <div class="ac-wrap">
+        <div class="ac-field">
+          <span class="ac-pfx">🏁</span>
+          <input class="ac-input" id="ac-ride-to" placeholder="North Van, Lonsdale, Park Royal…" autocomplete="off" oninput="acSearch('ride-to',this.value)"/>
+          <span class="ac-clear" id="ac-clear-ride-to" onclick="acClear('ride-to')">✕</span>
+        </div>
+        <div class="ac-dropdown" id="acd-ride-to"></div>
       </div>
-      <div class="corr-node"><div class="corr-node-dot"></div><div class="corr-node-lbl">North Shore /<br>North Van</div></div>
-    </div>
-    <!-- ORIGIN STOP -->
-    <div class="lbl">Your pickup stop</div>
-    <div id="p-origin-stops" class="stop-list"></div>
-    <!-- DEST STOP — revealed after origin selected -->
-    <div id="p-dest-section" style="display:none">
-      <div class="lbl">Your dropoff stop</div>
-      <div id="p-dest-stops" class="stop-list"></div>
-    </div>
-    <!-- PICKUP HUB -->
-    <div id="p-hub-section" style="display:none">
-      <div class="lbl">Pickup point (optional — helps driver)</div>
-      <div class="inp-icon" style="margin-bottom:12px"><span class="iico">📍</span><input class="inp" id="p-hub" placeholder="e.g. Surrey Central Station, Park &amp; Ride, Tim Hortons on 152 St"></div>
-    </div>
-    <!-- TIME MODE -->
-    <div class="lbl">When are you traveling?</div>
-    <div class="seg">
-      <button class="seg-b on" id="tmode-preset" onclick="setTimeMode('preset')">Preset Window</button>
-      <button class="seg-b" id="tmode-custom" onclick="setTimeMode('custom')">Custom Date &amp; Time</button>
-    </div>
-    <div id="p-preset-section"><div id="p-windows"></div></div>
-    <div id="p-custom-section" style="display:none">
-      <div class="lbl">Date</div>
-      <input type="date" class="dt" id="p-custom-date">
-      <div class="lbl">Preferred departure time</div>
-      <input type="time" class="dt" id="p-custom-time">
-      <div class="lbl">Flexibility</div>
-      <div class="pills">
-        <div class="pill on" onclick="selPill(this,'flex','0')">Exact time</div>
-        <div class="pill" onclick="selPill(this,'flex','15')">±15 min</div>
-        <div class="pill" onclick="selPill(this,'flex','30')">±30 min</div>
-        <div class="pill" onclick="selPill(this,'flex','60')">±60 min</div>
-      </div>
-      <div style="background:#EEF2FF;border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--blue);margin-bottom:12px">💡 Preset windows give the best match rate. Custom times expand options but may match fewer drivers.</div>
-    </div>
-    <div class="lbl">Seats needed</div>
-    <div class="stepper"><button class="step-btn" onclick="adjSeats(-1)">−</button><div class="step-val" id="p-seats">1</div><button class="step-btn" onclick="adjSeats(1)">+</button></div>
-    <div class="lbl">Recurring?</div>
-    <div class="seg"><button class="seg-b on" onclick="segSel(this,'p-recur','once')">One-time</button><button class="seg-b" onclick="segSel(this,'p-recur','weekly')">Weekly</button></div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="pNext1()">Find Available Rides →</button></div>
-</div>
-
-<!-- ══ RIDER 2 — Dynamic ranked listings ══ -->
-<div class="screen" id="sp2">
-  <div class="hdr"><button class="back" onclick="go('sp1')">←</button><div class="hdr-t">Available Rides</div><div class="hdr-s">2 of 3</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd"></div></div>
-    <div class="card" style="padding:12px 14px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mu)">
-        <span id="p2-from-label">—</span>
-        <span style="color:var(--bdr)">·</span>
-        <span id="p2-window-label">—</span>
+      <div class="chips">
+        <div class="chip" onclick="acSet('ride-to','North Vancouver, BC')">North Van</div>
+        <div class="chip" onclick="acSet('ride-to','Lonsdale Quay, North Vancouver, BC')">Lonsdale Quay</div>
+        <div class="chip" onclick="acSet('ride-to','Park Royal, West Vancouver, BC')">Park Royal</div>
+        <div class="chip" onclick="acSet('ride-to','Lynn Valley, North Vancouver, BC')">Lynn Valley</div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--mu);margin-bottom:12px" id="p2-count">Searching corridor…</div>
-    <div id="ride-listings"></div>
-  </div>
-</div>
-
-<!-- ══ RIDER 3 — Confirm with pickup/dropoff clarity ══ -->
-<div class="screen" id="sp3">
-  <div class="hdr"><button class="back" onclick="go('sp2')">←</button><div class="hdr-t">Confirm Booking</div><div class="hdr-s">3 of 3</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd on"></div></div>
-    <div class="ride-hero"><div style="font-size:13px;opacity:.8;margin-bottom:4px">Total for <span id="rc-seats">1</span> seat(s)</div><div class="ride-price-big" id="rc-price">$—</div><div style="font-size:12px;opacity:.7">Paid on trip completion · Refundable if driver cancels</div></div>
-    <div id="rc-breakdown"></div>
-    <!-- PICKUP/DROPOFF CONFIRMATION -->
-    <div class="pickup-warn">⚠️ Confirm pickup &amp; dropoff with your driver before booking. Meeting points must be agreed in advance to avoid confusion.</div>
-    <div class="pickup-confirm">
-      <div style="font-weight:800;font-size:13px;margin-bottom:10px">📍 Pickup &amp; Dropoff Details</div>
-      <div class="pu-row">
-        <div class="pu-ico">🟢</div>
-        <div><div class="pu-lbl">Your Pickup Stop</div><div class="pu-val" id="rc-pickup-stop">—</div><div class="pu-note" id="rc-pickup-hub"></div></div>
-      </div>
-      <div class="pu-row">
-        <div class="pu-ico">🔴</div>
-        <div><div class="pu-lbl">Your Dropoff Stop</div><div class="pu-val" id="rc-dropoff-stop">—</div></div>
-      </div>
-      <div class="pu-row">
-        <div class="pu-ico">🚗</div>
-        <div><div class="pu-lbl">Driver's Pickup Hub</div><div class="pu-val" id="rc-driver-hub">—</div><div class="pu-note" id="rc-detour-note"></div></div>
-      </div>
-      <div class="pu-row">
-        <div class="pu-ico">📏</div>
-        <div><div class="pu-lbl">Max Detour</div><div class="pu-val" id="rc-detour">—</div><div class="pu-note">Driver can flex this much off their route</div></div>
+    <div class="fg">
+      <label class="fl">Seats Needed</label>
+      <div class="counter-row">
+        <button class="counter-btn" onclick="adjCount('seats',-1)">−</button>
+        <div class="counter-val" id="count-seats">1</div>
+        <button class="counter-btn" onclick="adjCount('seats',1)">+</button>
       </div>
     </div>
-    <div class="card">
-      <div class="lbl">Driver</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div class="dav" id="rc-av">GS</div>
-        <div><div style="font-size:16px;font-weight:800" id="rc-name">—</div><div style="font-size:12px;color:var(--mu)" id="rc-stats">—</div></div>
+    <div class="fg">
+      <label class="fl">When are you traveling?</label>
+      <select class="fsel" id="ride-window">
+        <option value="morning">Morning (6:30–8:30 AM) — Outbound</option>
+        <option value="afternoon">Afternoon (2:30–5:30 PM) — Return</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="submitRide()">Find Available Rides →</button>
+  </div>
+</div>
+
+<!-- ============================================
+     PANEL: SEND PARCEL
+     ============================================ -->
+<div class="panel-overlay" id="panel-parcel">
+  <div class="panel-backdrop" onclick="closePanel('parcel')"></div>
+  <div class="panel">
+    <div class="panel-handle"></div>
+    <div class="panel-head">
+      <div class="panel-back" onclick="closePanel('parcel')">←</div>
+      <div class="panel-title">Send a Corridor Parcel</div>
+      <div class="step-label">Step 1 of 4</div>
+    </div>
+    <div class="notice warn">⚠️ <strong>Pilot limits:</strong> Small, non-fragile items only. No liquids, no restricted goods, max 5 kg. Carried by commuters.</div>
+    <div class="fg">
+      <label class="fl">What are you sending?</label>
+      <div class="opt-grid">
+        <div class="opt-btn" onclick="selOpt(this,'p-cat')">📄 Document</div>
+        <div class="opt-btn" onclick="selOpt(this,'p-cat')">📦 Small Package</div>
+        <div class="opt-btn" onclick="selOpt(this,'p-cat')">🍱 Food / Baked</div>
+        <div class="opt-btn" onclick="selOpt(this,'p-cat')">📬 Other Small</div>
       </div>
-      <div style="font-size:13px;color:var(--mu);margin-bottom:3px">Vehicle</div>
-      <div style="font-size:14px;font-weight:700" id="rc-car">—</div>
-      <div class="vplate" style="margin-top:7px;display:inline-block" id="rc-plate">—</div>
     </div>
-    <div class="card">
-      <div class="lbl">Corridor Route</div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;color:var(--mu)"><span>🕐 <span id="rc-time">—</span></span><span id="rc-days">Mon–Fri</span></div>
-      <div class="rp" style="margin-bottom:4px"><div class="rdot"></div><div class="rt" id="rc-from">—</div></div>
-      <div class="rp"><div class="rdot e"></div><div class="rt" id="rc-to">—</div></div>
+    <div class="fg">
+      <label class="fl">Pickup Address</label>
+      <div class="ac-wrap">
+        <div class="ac-field">
+          <span class="ac-pfx">📦</span>
+          <input class="ac-input" id="ac-parcel-from" placeholder="Sender address or corridor stop" autocomplete="off" oninput="acSearch('parcel-from',this.value)"/>
+          <span class="ac-clear" id="ac-clear-parcel-from" onclick="acClear('parcel-from')">✕</span>
+        </div>
+        <div class="ac-dropdown" id="acd-parcel-from"></div>
+      </div>
+      <div class="chips">
+        <div class="chip" onclick="acSet('parcel-from','Surrey Central Station, Surrey, BC')">Surrey Central</div>
+        <div class="chip" onclick="acSet('parcel-from','Guildford Town Centre, Surrey, BC')">Guildford</div>
+        <div class="chip" onclick="acSet('parcel-from','Abbotsford, BC')">Abbotsford</div>
+        <div class="chip" onclick="acSet('parcel-from','Langley, BC')">Langley</div>
+      </div>
     </div>
-    <div class="card"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:22px">💳</span><div><div style="font-weight:700;font-size:14px">Visa •••• 4242</div><div style="font-size:11px;color:var(--mu)">Exp 12/27</div></div><div style="margin-left:auto;color:var(--mu)">›</div></div></div>
-  </div>
-  <div class="bot"><button class="btn bp" id="rc-btn" onclick="confirmRide()">✅ Confirm Booking · <span id="rc-btn-t">$—</span></button></div>
-</div>
-
-<!-- ══ DRIVER 1 ══ -->
-<div class="screen" id="st1">
-  <div class="hdr"><button class="back" onclick="go('sh')">←</button><div class="hdr-t">Register Your Commute</div><div class="hdr-s">1 of 4</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div></div>
-    <div class="lbl">Which direction do you drive?</div>
-    <div class="dir-toggle">
-      <div class="dir-card on" id="tdir-west" onclick="selDriverDir('westbound')"><div class="dir-ico">🌅→</div><div class="dir-name">Westbound</div><div class="dir-sub">Towards North Shore<br>Morning commute</div></div>
-      <div class="dir-card" id="tdir-east" onclick="selDriverDir('eastbound')"><div class="dir-ico">←🌆</div><div class="dir-name">Eastbound</div><div class="dir-sub">Towards Surrey/Abbotsford<br>Afternoon return</div></div>
+    <div class="fg">
+      <label class="fl">Delivery Address</label>
+      <div class="ac-wrap">
+        <div class="ac-field">
+          <span class="ac-pfx">🏠</span>
+          <input class="ac-input" id="ac-parcel-to" placeholder="Recipient address or corridor stop" autocomplete="off" oninput="acSearch('parcel-to',this.value)"/>
+          <span class="ac-clear" id="ac-clear-parcel-to" onclick="acClear('parcel-to')">✕</span>
+        </div>
+        <div class="ac-dropdown" id="acd-parcel-to"></div>
+      </div>
+      <div class="chips">
+        <div class="chip" onclick="acSet('parcel-to','North Vancouver, BC')">North Van</div>
+        <div class="chip" onclick="acSet('parcel-to','Lonsdale Quay, North Vancouver, BC')">Lonsdale Quay</div>
+        <div class="chip" onclick="acSet('parcel-to','Park Royal, West Vancouver, BC')">Park Royal</div>
+        <div class="chip" onclick="acSet('parcel-to','Lynn Valley, North Vancouver, BC')">Lynn Valley</div>
+      </div>
     </div>
-    <div class="lbl">Your starting stop</div>
-    <div id="t-origin-stops" class="stop-list"></div>
-    <div class="lbl">Your destination stop</div>
-    <div id="t-dest-stops" class="stop-list"></div>
-    <div class="lbl">Max detour you'll allow</div>
-    <div class="pills">
-      <div class="pill on" onclick="selPill(this,'t-detour','2')">±2 km</div>
-      <div class="pill" onclick="selPill(this,'t-detour','5')">±5 km</div>
-      <div class="pill" onclick="selPill(this,'t-detour','10')">±10 km</div>
+    <div class="fg">
+      <label class="fl">Commute Window</label>
+      <select class="fsel">
+        <option>Morning (6:30–8:30 AM)</option>
+        <option>Afternoon (2:30–5:30 PM)</option>
+      </select>
     </div>
-    <div class="lbl">Pickup hub (where riders can meet you)</div>
-    <div class="inp-icon" style="margin-bottom:0"><span class="iico">📍</span><input class="inp" id="t-hub" placeholder="e.g. Surrey Central Station, Park &amp; Ride on 152 St"></div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="tNext1()">Set Schedule →</button></div>
-</div>
-
-<!-- ══ DRIVER 2 ══ -->
-<div class="screen" id="st2">
-  <div class="hdr"><button class="back" onclick="go('st1')">←</button><div class="hdr-t">Your Schedule</div><div class="hdr-s">2 of 4</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd"></div><div class="sd"></div></div>
-    <div class="lbl">Departure window</div>
-    <div id="t-windows"></div>
-    <div class="lbl">Days available</div>
-    <div class="day-row" id="t-days" style="display:flex;gap:7px;margin-bottom:14px"></div>
-    <div class="lbl">Recurring?</div>
-    <div class="seg"><button class="seg-b on" onclick="segSel(this,'t-recur','weekly')">Weekly (recurring)</button><button class="seg-b" onclick="segSel(this,'t-recur','once')">One-time</button></div>
-    <div class="earn-card"><div style="font-weight:800;font-size:14px;margin-bottom:3px">💰 Estimated earnings</div><div style="font-size:12px;color:var(--mu)">Based on corridor distance</div><div style="font-size:22px;font-weight:900;color:#059669;margin-top:3px" id="earn-pot">$—</div><div style="font-size:11px;color:var(--mu);margin-top:2px">Per trip · Paid on delivery or dropoff</div></div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="tNext2()">Vehicle &amp; Capacity →</button></div>
-</div>
-
-<!-- ══ DRIVER 3 ══ -->
-<div class="screen" id="st3">
-  <div class="hdr"><button class="back" onclick="go('st2')">←</button><div class="hdr-t">Vehicle &amp; Capacity</div><div class="hdr-s">3 of 4</div></div>
-  <div class="sb">
-    <div class="steps"><div class="sd on"></div><div class="sd on"></div><div class="sd on"></div><div class="sd"></div></div>
-    <div class="lbl">Travel mode</div>
-    <div class="vg">
-      <div class="vc" onclick="selVeh(this,'car')"><div class="vc-i">🚗</div><div class="vc-n">Car</div></div>
-      <div class="vc" onclick="selVeh(this,'ev')"><div class="vc-i">⚡</div><div class="vc-n">EV</div></div>
-      <div class="vc" onclick="selVeh(this,'suv')"><div class="vc-i">🚙</div><div class="vc-n">SUV</div></div>
-      <div class="vc" onclick="selVeh(this,'truck')"><div class="vc-i">🛻</div><div class="vc-n">Truck</div></div>
-      <div class="vc" onclick="selVeh(this,'van')"><div class="vc-i">🚐</div><div class="vc-n">Van</div></div>
-      <div class="vc" onclick="selVeh(this,'transit')"><div class="vc-i">🚌</div><div class="vc-n">Bus</div></div>
+    <div class="price-box">
+      <div class="price-row"><span class="pr-label">FedEx Economy</span><span class="pr-val strike">$18.50</span></div>
+      <div class="price-row"><span class="pr-label">Purolator Local</span><span class="pr-val strike">$14.75</span></div>
+      <div class="price-row"><span class="pr-label">🟢 Couride</span><span class="pr-val accent">from $6.00</span></div>
     </div>
-    <div class="lbl">Car details</div>
-    <div class="inp-icon" style="margin-bottom:10px"><span class="iico">🚗</span><input class="inp" id="t-model" placeholder="Make &amp; model (e.g. Honda CR-V 2022)"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-      <div class="inp-icon" style="margin-bottom:0"><span class="iico" style="font-size:15px">🎨</span><input class="inp" style="padding-left:38px" id="t-color" placeholder="Color"></div>
-      <div class="inp-icon" style="margin-bottom:0"><span class="iico" style="font-size:15px">🪪</span><input class="inp" style="padding-left:38px;text-transform:uppercase" id="t-plate" placeholder="Plate"></div>
+    <div class="fg">
+      <label class="fl">Delivery Speed</label>
+      <div class="speed-card sel" id="speed-flex" onclick="selSpeed('flex')">
+        <div class="sc-head"><span class="sc-name">🔄 Flexible</span><span class="sc-badge save">Sender saves 10%</span></div>
+        <div class="sc-desc">Anytime during the commute window — driver's pace</div>
+      </div>
+      <div class="speed-card" id="speed-window" onclick="selSpeed('window')">
+        <div class="sc-head"><span class="sc-name">🕐 Time Window</span><span class="sc-badge std">Standard rate</span></div>
+        <div class="sc-desc">Deliver within a set part of the commute</div>
+      </div>
+      <div class="speed-card" id="speed-priority" onclick="selSpeed('priority')">
+        <div class="sc-head"><span class="sc-name">⚡ Priority</span><span class="sc-badge earn">Driver earns +20%</span></div>
+        <div class="sc-desc">Straight-through delivery, fastest option</div>
+      </div>
     </div>
-    <div class="lbl">Rider seats available</div>
-    <div class="stepper"><button class="step-btn" onclick="adjDSeats(-1)">−</button><div class="step-val" id="t-seats">2</div><button class="step-btn" onclick="adjDSeats(1)">+</button></div>
-    <div class="lbl">Parcel capacity</div>
-    <div class="pills"><div class="pill on" onclick="selPill(this,'parcel-cap','none')">None</div><div class="pill" onclick="selPill(this,'parcel-cap','envelope')">✉️ Envelope</div><div class="pill" onclick="selPill(this,'parcel-cap','small')">📦 Small bag</div></div>
-    <div class="lbl">What can you carry?</div>
-    <div class="pgrid">
-      <div class="pc on" onclick="selPref(this,'both')"><div class="pc-i">🤝</div><div class="pc-n">Riders + Parcels</div></div>
-      <div class="pc" onclick="selPref(this,'pax')"><div class="pc-i">👤</div><div class="pc-n">Riders only</div></div>
-      <div class="pc" onclick="selPref(this,'pkg')"><div class="pc-i">📦</div><div class="pc-n">Parcels only</div></div>
-    </div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="go('st4')">See Matching Requests →</button></div>
-</div>
-
-<!-- ══ DRIVER 4 ══ -->
-<div class="screen" id="st4">
-  <div class="hdr"><button class="back" onclick="go('st3')">←</button><div class="hdr-t">Requests on Your Route</div><div class="hdr-s">4 of 4</div></div>
-  <div class="sb">
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;color:var(--mu)">Sorted by corridor match quality</div><div class="shim" style="width:60px"></div></div>
-    <div id="driver-match-list"></div>
-    <div style="height:12px"></div>
-    <button class="btn bs" onclick="registerRouteOnly()">Register Route Only · Notify me of future requests</button>
+    <button class="btn btn-primary" onclick="submitParcel()">Continue → Recipient Details</button>
   </div>
 </div>
 
-<!-- ══ DELIVERY PREF ══ -->
-<div class="screen" id="sdp">
-  <div class="hdr"><button class="back" onclick="go('st4')">←</button><div class="hdr-t">Delivery Preference</div><div class="hdr-s">Choose one</div></div>
-  <div class="sb">
-    <div style="font-size:13px;color:var(--mu);margin-bottom:16px;line-height:1.6">When during your commute will you deliver? This adjusts your payout.</div>
-    <div class="dp-card on" id="dp-window" onclick="selDelivPref('window')">
-      <div class="dp-top"><div class="dp-ico" style="background:#EEF2FF">🕐</div><div><div class="dp-name">Time Window</div><div class="dp-sub">Deliver within a set part of your commute</div></div></div>
-      <div style="background:var(--bg);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px"><div style="font-size:12px;color:var(--mu);margin-bottom:4px">Select window</div><div style="display:flex;gap:8px;flex-wrap:wrap" id="window-slots"><div class="pill on" style="font-size:12px" onclick="selWindowSlot(event,this,'9am-12pm')">9 AM–12 PM</div><div class="pill" style="font-size:12px" onclick="selWindowSlot(event,this,'12pm-3pm')">12–3 PM</div><div class="pill" style="font-size:12px" onclick="selWindowSlot(event,this,'3pm-6pm')">3–6 PM</div></div></div>
-      <div class="dp-tag-row"><span class="dp-impact neu">Standard rate</span><span class="dp-time">Scheduled window</span></div>
+<!-- ============================================
+     PANEL: DRIVER REGISTRATION
+     ============================================ -->
+<div class="panel-overlay" id="panel-driver">
+  <div class="panel-backdrop" onclick="closePanel('driver')"></div>
+  <div class="panel">
+    <div class="panel-handle"></div>
+    <div class="panel-head">
+      <div class="panel-back" onclick="closePanel('driver')">←</div>
+      <div class="panel-title">Register Your Commute</div>
+      <div class="step-label">Step 1 of 4</div>
     </div>
-    <div class="dp-card" id="dp-flexible" onclick="selDelivPref('flexible')">
-      <div class="dp-top"><div class="dp-ico" style="background:#ECFDF5">🔄</div><div><div class="dp-name">Flexible</div><div class="dp-sub">Anytime during your commute — your pace</div></div></div>
-      <div class="dp-tag-row"><span class="dp-impact ok">−10% · Sender saves</span><span class="dp-time">Any time today</span></div>
+    <div class="fg">
+      <label class="fl">Direction</label>
+      <div class="opt-grid">
+        <div class="opt-btn" onclick="selOpt(this,'d-dir')">🌅→ Westbound<small>Toward North Shore</small></div>
+        <div class="opt-btn" onclick="selOpt(this,'d-dir')">←🌆 Eastbound<small>Toward Surrey</small></div>
+      </div>
     </div>
-    <div class="dp-card" id="dp-priority" onclick="selDelivPref('priority')">
-      <div class="dp-top"><div class="dp-ico" style="background:#FEF2F2">⚡</div><div><div class="dp-name">Priority</div><div class="dp-sub">Straight-through delivery, minimum stops</div></div></div>
-      <div class="dp-tag-row"><span class="dp-impact add">+20% · You earn more</span><span class="dp-time">Fastest</span></div>
+    <div class="fg">
+      <label class="fl">Your Starting Address</label>
+      <div class="ac-wrap">
+        <div class="ac-field">
+          <span class="ac-pfx">🏠</span>
+          <input class="ac-input" id="ac-drv-from" placeholder="Your home or commute start" autocomplete="off" oninput="acSearch('drv-from',this.value)"/>
+          <span class="ac-clear" id="ac-clear-drv-from" onclick="acClear('drv-from')">✕</span>
+        </div>
+        <div class="ac-dropdown" id="acd-drv-from"></div>
+      </div>
+      <div class="chips">
+        <div class="chip" onclick="acSet('drv-from','Surrey, BC')">Surrey</div>
+        <div class="chip" onclick="acSet('drv-from','Abbotsford, BC')">Abbotsford</div>
+        <div class="chip" onclick="acSet('drv-from','Langley, BC')">Langley</div>
+        <div class="chip" onclick="acSet('drv-from','Aldergrove, BC')">Aldergrove</div>
+      </div>
     </div>
-    <div class="card" style="background:linear-gradient(135deg,#EEF2FF,#F4F6FF);border-color:#D0D9FF;margin-top:4px">
-      <div style="font-size:12px;color:var(--mu);margin-bottom:6px">Adjusted payout</div>
-      <div style="display:flex;align-items:baseline;gap:6px"><div style="font-size:28px;font-weight:900;color:var(--blue)" id="dp-earn-final">$—</div><div style="font-size:12px;color:var(--mu)" id="dp-earn-note">Standard rate</div></div>
-      <div style="font-size:11px;color:var(--mu);margin-top:4px" id="dp-earn-sub">Paid instantly on verified delivery</div>
+    <div class="fg">
+      <label class="fl">Your Destination Address</label>
+      <div class="ac-wrap">
+        <div class="ac-field">
+          <span class="ac-pfx">🏢</span>
+          <input class="ac-input" id="ac-drv-to" placeholder="Your work or commute end" autocomplete="off" oninput="acSearch('drv-to',this.value)"/>
+          <span class="ac-clear" id="ac-clear-drv-to" onclick="acClear('drv-to')">✕</span>
+        </div>
+        <div class="ac-dropdown" id="acd-drv-to"></div>
+      </div>
+      <div class="chips">
+        <div class="chip" onclick="acSet('drv-to','North Vancouver, BC')">North Van</div>
+        <div class="chip" onclick="acSet('drv-to','West Vancouver, BC')">West Van</div>
+        <div class="chip" onclick="acSet('drv-to','Burnaby, BC')">Burnaby</div>
+        <div class="chip" onclick="acSet('drv-to','Vancouver, BC')">Vancouver</div>
+      </div>
     </div>
-  </div>
-  <div class="bot"><button class="btn bp" onclick="confirmDelivPref()">Confirm &amp; Accept →</button></div>
-</div>
-
-<!-- ══ MATCH ══ -->
-<div class="screen" id="sm">
-  <div class="hdr"><button class="back" onclick="go('sh')">←</button><div class="hdr-t">Match Found! 🎉</div></div>
-  <div class="sb">
-    <div id="map-match" style="height:220px;border-radius:var(--r);overflow:hidden;margin-bottom:14px"></div>
-    <div class="card"><div style="display:flex;align-items:center;gap:12px;padding:0 0 12px;border-bottom:1px solid var(--bdr)"><div class="dav">MK</div><div><div style="font-size:15px;font-weight:800">Marcus K.</div><div style="font-size:12px;color:var(--mu);margin-top:2px">⭐ 4.9 · 148 corridor trips · Regular commuter</div></div><div style="margin-left:auto;background:var(--blue);color:#fff;border-radius:var(--rs);padding:6px 12px;font-size:12px;font-weight:700">ETA 18 min</div></div><div id="match-deliv-badge" style="margin-top:10px"></div><div style="margin-top:8px"><div class="rp"><div class="rdot"></div><div class="rt">Surrey → HWY 1</div></div><div class="rp"><div class="rdot e"></div><div class="rt">North Vancouver</div></div></div></div>
-    <div class="card" style="display:grid;grid-template-columns:1fr 1fr;text-align:center"><div style="border-right:1px solid var(--bdr)"><div style="font-size:20px;font-weight:900;color:var(--blue)">18 min</div><div style="font-size:11px;color:var(--mu)">Pickup ETA</div></div><div><div style="font-size:20px;font-weight:900;color:var(--ok)" id="match-total">$—</div><div style="font-size:11px;color:var(--mu)">You pay</div></div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="btn bs" onclick="go('sc')">💬 Chat</button><button class="btn bp" onclick="go('stk')">Track Live →</button></div>
-  </div>
-</div>
-
-<!-- ══ TRACKING ══ -->
-<div class="screen" id="stk">
-  <div id="map-track" style="height:260px;flex-shrink:0"></div>
-  <div class="trk-sb">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><button class="back" onclick="go('sh')" style="background:var(--bg)">←</button><div style="font-size:15px;font-weight:800">Live Tracking</div><button class="btn btn-sm bs" onclick="go('sc')" style="padding:7px 14px">💬 Chat</button></div>
-    <div class="eta-big"><div class="eta-lbl">Estimated delivery in</div><div class="eta-num" id="eta-num">22:00</div><div style="font-size:12px;color:var(--mu);margin-top:3px">Marcus is on his corridor route 🚗</div></div>
-    <div id="trk-deliv-badge"></div>
-    <div class="tl">
-      <div class="tli"><div class="tl-dw"><div class="tl-dot done"></div><div class="tl-line done"></div></div><div><div class="tl-l">Matched with corridor driver</div><div class="tl-s">7:04 AM · Matched in 3 min</div></div></div>
-      <div class="tli"><div class="tl-dw"><div class="tl-dot done"></div><div class="tl-line done"></div></div><div><div class="tl-l">Picked up</div><div class="tl-s">7:22 AM · QR verified</div></div></div>
-      <div class="tli"><div class="tl-dw"><div class="tl-dot act"></div><div class="tl-line"></div></div><div><div class="tl-l">In transit · On HWY 1</div><div class="tl-s">Marcus heading through Burnaby</div></div></div>
-      <div class="tli"><div class="tl-dw"><div class="tl-dot"></div></div><div><div class="tl-l" style="color:var(--mu)">Delivered · North Shore</div><div class="tl-s">Est. 8:10 AM</div></div></div>
+    <div class="fg">
+      <label class="fl">Max Detour You'll Allow</label>
+      <div class="opt-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="opt-btn" onclick="selOpt(this,'d-detour')">±2 km</div>
+        <div class="opt-btn sel" onclick="selOpt(this,'d-detour')">±5 km</div>
+        <div class="opt-btn" onclick="selOpt(this,'d-detour')">±10 km</div>
+      </div>
     </div>
-  </div>
-</div>
-
-<!-- ══ CHAT ══ -->
-<div class="screen" id="sc">
-  <div class="hdr"><button class="back" onclick="go('stk')">←</button><div class="hdr-t">Marcus K.</div><div style="width:9px;height:9px;border-radius:50%;background:var(--ok);margin-left:auto"></div></div>
-  <div class="chat-msgs" id="chat-msgs"></div>
-  <div class="chat-ir"><textarea class="ci" id="chat-inp" placeholder="Message…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea><button class="csend" onclick="sendMsg()">➤</button></div>
-</div>
-
-<!-- ══ ABOUT ══ -->
-<div class="screen" id="sab">
-  <div class="ab-sb">
-    <div class="ab-hero">
-      <button class="back" onclick="go('sh')" style="background:rgba(255,255,255,.12);color:#fff;margin-bottom:18px">←</button>
-      <div class="ab-eyebrow">Pilot · Version 4 · Corridor-First</div>
-      <div class="ab-h">We start with one road. Not every road.</div>
-      <div class="ab-sub">Couride is launching as a corridor-specific product. One route, done right, before anything else.</div>
-      <div class="ab-map-strip">🗺️ Surrey / Abbotsford → North Shore via HWY 1 · ~80km · Weekdays</div>
+    <div class="fg">
+      <label class="fl">What Can You Carry?</label>
+      <div class="opt-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="opt-btn" onclick="selOpt(this,'d-carry')">🤝 Both</div>
+        <div class="opt-btn" onclick="selOpt(this,'d-carry')">👤 Riders</div>
+        <div class="opt-btn" onclick="selOpt(this,'d-carry')">📦 Parcels</div>
+      </div>
     </div>
-    <div class="ab-sec" style="padding-top:22px">
-      <div class="ab-sec-t">Why one corridor?</div>
-      <div class="ab-sec-p">City-wide marketplaces fail at launch because supply and demand never overlap enough on any single route. Couride proves the model on one high-density BC commuter corridor first — then expands.</div>
-      <div class="ab-div"></div>
-      <div class="ev-row"><div class="ev-ico" style="background:#EEF2FF">🔄</div><div><div class="ev-t">Couride — The coordination layer</div><div class="ev-s">No new trips dispatched. Real commuters, real routes. Packages and passengers matched to existing movement. Less traffic, cheaper for everyone.</div></div></div>
-      <div class="ab-div"></div>
-      <div class="ab-sec-t">The expansion plan</div>
-      <div class="phase-row"><div class="phase-num phase-now">Now</div><div><div class="phase-t">Surrey / Abbotsford ↔ North Shore</div><div class="phase-s">Prove reliability. Build driver habits. Validate pricing model.</div></div></div>
-      <div class="phase-row"><div class="phase-num phase-next">Next</div><div><div class="phase-t">Fraser Valley ↔ Metro Vancouver</div><div class="phase-s">Add HWY 1 express zones. Expand parcel categories.</div></div></div>
-      <div class="phase-row"><div class="phase-num phase-later">Later</div><div><div class="phase-t">Corridor network across BC</div><div class="phase-s">Island corridors, Okanagan, inter-city. Density first, always.</div></div></div>
-      <div style="text-align:center;padding:18px 0 36px"><button class="btn bp" onclick="go('sh')" style="max-width:260px;margin:0 auto">Join the Pilot</button></div>
+    <div class="payout-bar">
+      <div>
+        <div class="pb-label">Est. earnings per trip</div>
+        <div class="pb-sub">Based on corridor distance (~80km)</div>
+      </div>
+      <div class="pb-amount">$28</div>
     </div>
+    <button class="btn btn-primary" onclick="submitDriver()">Set My Schedule →</button>
   </div>
 </div>
 
-</div><!-- /app -->
+<!-- ============================================
+     PANEL: LIVE TRACKING
+     ============================================ -->
+<div class="panel-overlay" id="panel-tracking">
+  <div class="panel-backdrop" onclick="closePanel('tracking')"></div>
+  <div class="panel">
+    <div class="panel-handle"></div>
+    <div class="panel-head">
+      <div class="panel-back" onclick="closePanel('tracking')">←</div>
+      <div class="panel-title">Live Tracking</div>
+    </div>
+    <div class="driver-card">
+      <div class="dc-top">
+        <div class="dc-avatar">MK</div>
+        <div>
+          <div class="dc-name">Marcus K.</div>
+          <div class="dc-stars">⭐ 4.9 · 148 corridor trips · Regular commuter</div>
+        </div>
+      </div>
+      <div class="dc-meta">
+        <div class="dc-meta-item"><div class="dc-ml">ETA</div><div class="dc-mv" id="tracking-eta">18 min</div></div>
+        <div class="dc-meta-item"><div class="dc-ml">Route</div><div class="dc-mv">Surrey → HWY 1</div></div>
+        <div class="dc-meta-item"><div class="dc-ml">Vehicle</div><div class="dc-mv">2021 Honda CRV</div></div>
+        <div class="dc-meta-item"><div class="dc-ml">Plate</div><div class="dc-mv">BC 7RX 492</div></div>
+      </div>
+    </div>
+    <div class="notice">🚗 Marcus is on his corridor route — estimated delivery <strong>8:10 AM</strong></div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot done"></div><div><div class="tl-time">7:04 AM · Matched in 3 min</div><div class="tl-label">Matched with corridor driver</div></div></div>
+      <div class="tl-item"><div class="tl-dot done"></div><div><div class="tl-time">7:22 AM · QR verified</div><div class="tl-label">Picked up</div></div></div>
+      <div class="tl-item"><div class="tl-dot active"></div><div><div class="tl-time">Now · On HWY 1</div><div class="tl-label">In transit</div><div class="tl-desc">Marcus heading through Burnaby</div></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div><div class="tl-time">Est. 8:10 AM</div><div class="tl-label">Delivered · North Shore</div></div></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:1rem">💬 Message Marcus</button>
+  </div>
+</div>
+
+<!-- ============================================
+     PANEL: ABOUT
+     ============================================ -->
+<div class="panel-overlay" id="panel-about">
+  <div class="panel-backdrop" onclick="closePanel('about')"></div>
+  <div class="panel">
+    <div class="panel-handle"></div>
+    <div class="panel-head">
+      <div class="panel-back" onclick="closePanel('about')">←</div>
+      <div class="panel-title">Pilot v4 · Corridor-First</div>
+    </div>
+    <div class="about-section">
+      <h3>We start with one road. Not every road.</h3>
+      <div class="notice">🗺️ Surrey / Abbotsford → North Shore via HWY 1 · ~80km · Weekdays only</div>
+      <p style="font-size:0.85rem;color:var(--text2);line-height:1.6">City-wide marketplaces fail at launch because supply and demand never overlap on any single route. Couride proves the model on one high-density BC corridor first — then expands.</p>
+    </div>
+    <div class="about-section">
+      <h3>Expansion plan</h3>
+      <div class="exp-card"><div class="exp-badge now">Now</div><div class="exp-text"><strong>Surrey / Abbotsford ↔ North Shore</strong><span>Prove reliability. Validate pricing. Build driver habits.</span></div></div>
+      <div class="exp-card"><div class="exp-badge next">Next</div><div class="exp-text"><strong>Fraser Valley ↔ Metro Vancouver</strong><span>HWY 1 express zones. More parcel categories.</span></div></div>
+      <div class="exp-card"><div class="exp-badge later">Later</div><div class="exp-text"><strong>Corridor network across BC</strong><span>Island, Okanagan, inter-city. Density first.</span></div></div>
+    </div>
+    <button class="btn btn-primary" onclick="closePanel('about')">Join the Pilot</button>
+  </div>
+</div>
+
+<!-- ============================================
+     JAVASCRIPT
+     ============================================ -->
 <script>
-/* ════════════════════════════════════════
-   CORRIDOR STOP SEQUENCE
-   Eastbound index 0 = North Shore (west end)
-   Eastbound index 8 = Mission (east end)
-   WESTBOUND travels: higher idx → lower idx
-   EASTBOUND travels: lower idx → higher idx
-════════════════════════════════════════ */
-const CORRIDOR_STOPS = [
-  {id:'north-shore', label:'North Shore / North Van', icon:'🌉', sub:'Lions Gate · Lonsdale'},
-  {id:'burnaby',     label:'Burnaby',                 icon:'🏙️', sub:'Metrotown · HWY 1 corridor'},
-  {id:'coquitlam',   label:'Coquitlam',               icon:'🔄', sub:'Coquitlam Centre · Lougheed'},
-  {id:'maple-ridge', label:'Maple Ridge',             icon:'🌲', sub:'Haney · HWY 7'},
-  {id:'surrey',      label:'Surrey',                  icon:'🏢', sub:'Central · King George'},
-  {id:'white-rock',  label:'White Rock',              icon:'🏖️', sub:'South Surrey · 152 St'},
-  {id:'langley',     label:'Langley',                 icon:'🏘️', sub:'Willowbrook · HWY 1'},
-  {id:'abbotsford',  label:'Abbotsford',              icon:'🌾', sub:'Clearbrook · HWY 1'},
-  {id:'mission',     label:'Mission',                 icon:'🏔️', sub:'Mission City · HWY 7'},
-];
-const STOP_IDS = CORRIDOR_STOPS.map(s => s.id);
+'use strict';
+const SUPA_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3V2bWp4am1uaHVjcmtqd3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjY2NTEsImV4cCI6MjA5Mjc0MjY1MX0.oDiUZN2bUqgcg6_LoP4Bblpm4zzu7D23K2FyfAlvDzw';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// Valid origins/dests by direction
-function originsFor(dir){
-  return dir === 'westbound'
-    ? CORRIDOR_STOPS.slice(1)   // can't start from North Shore going west
-    : CORRIDOR_STOPS.slice(0,-1); // can't start from Mission going east
-}
-function destsFor(dir, originId){
-  const idx = STOP_IDS.indexOf(originId);
-  if(idx < 0) return [];
-  return dir === 'westbound'
-    ? CORRIDOR_STOPS.slice(0, idx)         // west of origin
-    : CORRIDOR_STOPS.slice(idx + 1);       // east of origin
-}
+// ── AUTH STATE ─────────────────────────────────
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) showApp(session.user);
+  else showAuth();
+});
 
-/* ════════════════════════════════════════
-   CORRIDOR DRIVERS (with stop-based routes + rating)
-════════════════════════════════════════ */
-const CORRIDOR_DRIVERS = [
-  { av:'GS', name:'Gurdit S.', stats:'⭐ 4.9 · 864 trips', rating:4.9,
-    car:'Ford Mustang · White · 2023', plate:'BCC 4821',
-    originStop:'surrey', destStop:'north-shore', direction:'westbound',
-    window:'morning-mid', windowLabel:'7:00–7:30 AM', days:'Mon–Fri',
-    km:38, seats:2, pref:'both', recurring:true, maxDetourKm:3,
-    pickupHub:'Surrey Central Station (King George Blvd)', dropoffHub:'Lonsdale Quay or Park Royal' },
-  { av:'SM', name:'Sarah M.', stats:'⭐ 4.7 · 312 trips', rating:4.7,
-    car:'Toyota Camry · Blue · 2022', plate:'DLV 7732',
-    originStop:'abbotsford', destStop:'north-shore', direction:'westbound',
-    window:'morning-early', windowLabel:'6:30–7:00 AM', days:'Mon–Thu',
-    km:80, seats:1, pref:'pax', recurring:true, maxDetourKm:2,
-    pickupHub:'Abbotsford Bus Exchange', dropoffHub:'Park Royal Mall or Lonsdale Quay' },
-  { av:'DK', name:'Dev K.', stats:'⭐ 4.8 · 521 trips', rating:4.8,
-    car:'Honda CR-V · Grey · 2021', plate:'FMP 3317',
-    originStop:'langley', destStop:'burnaby', direction:'westbound',
-    window:'morning-late', windowLabel:'7:30–8:30 AM', days:'Mon–Fri',
-    km:46, seats:3, pref:'both', recurring:true, maxDetourKm:5,
-    pickupHub:'Langley Centre Bus Exchange', dropoffHub:'Metrotown Station or Production Way' },
-  { av:'RP', name:'Rajan P.', stats:'⭐ 4.6 · 97 trips', rating:4.6,
-    car:'Tesla Model 3 · Blue · 2023', plate:'EV7 3321',
-    originStop:'coquitlam', destStop:'north-shore', direction:'westbound',
-    window:'morning-mid', windowLabel:'7:00–7:30 AM', days:'Mon–Fri',
-    km:20, seats:3, pref:'both', recurring:true, maxDetourKm:3,
-    pickupHub:'Coquitlam Central Station', dropoffHub:'North Van Job Sites or Lions Gate' },
-];
-
-/* ════════════════════════════════════════
-   SMART MATCHING ALGORITHM
-   Inspired by BlaBlaCar / Poparide corridor logic
-════════════════════════════════════════ */
-function scoreRideMatch(driver, req) {
-  const dOrigIdx = STOP_IDS.indexOf(driver.originStop);
-  const dDestIdx = STOP_IDS.indexOf(driver.destStop);
-  const rOrigIdx = STOP_IDS.indexOf(req.originStop);
-  const rDestIdx = STOP_IDS.indexOf(req.destStop);
-
-  const reasons = [];
-  let score = 0;
-
-  // Direction must match — hard requirement
-  if(driver.direction !== req.direction) return { score: -1 };
-
-  const isWest = driver.direction === 'westbound';
-  // Westbound: driver goes from higher idx → lower idx
-  // Rider's stops must both fall within driver's range, and rider's dest < rider's orig
-  let rOrigOnRoute, rDestOnRoute, bothOnRoute;
-  if(isWest){
-    rOrigOnRoute = rOrigIdx <= dOrigIdx && rOrigIdx > dDestIdx;
-    rDestOnRoute = rDestIdx < rOrigIdx  && rDestIdx >= dDestIdx;
-    bothOnRoute  = rOrigOnRoute && rDestOnRoute;
-  } else {
-    // Eastbound: driver goes lower → higher
-    rOrigOnRoute = rOrigIdx >= dOrigIdx && rOrigIdx < dDestIdx;
-    rDestOnRoute = rDestIdx > rOrigIdx  && rDestIdx <= dDestIdx;
-    bothOnRoute  = rOrigOnRoute && rDestOnRoute;
-  }
-
-  if(bothOnRoute){
-    score += 60;
-    const oLabel = CORRIDOR_STOPS[rOrigIdx]?.label || '?';
-    const dLabel = CORRIDOR_STOPS[rDestIdx]?.label || '?';
-    reasons.push(oLabel + ' → ' + dLabel + ' is fully on this route');
-  } else if(rOrigOnRoute){
-    score += 25;
-    reasons.push('pickup area reachable — confirm dropoff with driver');
-  } else {
-    return { score: 0 }; // completely off route
-  }
-
-  // Driver pref — must accept riders
-  if(driver.pref === 'pkg') return { score: 0 };
-  score += 10; reasons.push('accepts riders');
-
-  // Time window
-  const ALL_WINS = ['morning-early','morning-mid','morning-late','evening-early','evening-mid','evening-late'];
-  if(req.window && driver.window === req.window){
-    score += 20; reasons.push('exact time window match (' + driver.windowLabel + ')');
-  } else if(req.customTime){
-    score += 8; reasons.push('custom time — verify with driver');
-  } else if(req.window){
-    const diff = Math.abs(ALL_WINS.indexOf(driver.window) - ALL_WINS.indexOf(req.window));
-    if(diff === 1){ score += 10; reasons.push('adjacent time window'); }
-  }
-
-  // Seat availability
-  const seatsNeeded = req.seats || 1;
-  if(driver.seats >= seatsNeeded){
-    score += 10; reasons.push(driver.seats + ' seat' + (driver.seats !== 1 ? 's' : '') + ' available');
-  } else {
-    return { score: 0 }; // not enough seats
-  }
-
-  // Rating
-  if(driver.rating >= 4.9)      { score += 8; reasons.push('⭐ ' + driver.rating + ' top-rated'); }
-  else if(driver.rating >= 4.7) { score += 5; reasons.push('⭐ ' + driver.rating + ' well-rated'); }
-
-  // Recurring bonus
-  if(driver.recurring && req.recurring){ score += 5; reasons.push('recurring commuter — reliable'); }
-
-  // Detour tolerance
-  if(driver.maxDetourKm >= 5) score += 4;
-  else if(driver.maxDetourKm >= 3) score += 2;
-
-  // Price bonus (lower price = better for rider)
-  const rideP = calcRidePrice(driver.km, seatsNeeded);
-  if(rideP.perSeat < 8) { score += 4; reasons.push('lowest price on corridor'); }
-
-  // Determine tier
-  let tier, tierLabel, tierCls;
-  if(score >= 100){     tier='best';    tierLabel='🏆 Best Match';     tierCls='t-best'; }
-  else if(score >= 65){ tier='good';    tierLabel='✅ Good Match';      tierCls='t-good'; }
-  else{                 tier='possible';tierLabel='🔍 Possible Match';  tierCls='t-possible'; }
-
-  const reason = reasons.slice(0, 3).join(' · ') + (reasons.length > 3 ? ' +' + (reasons.length - 3) : '');
-  return { score, tier, tierLabel, tierCls, reason };
-}
-
-/* ════════════════════════════════════════
-   PRICING ENGINE (unchanged from v3)
-════════════════════════════════════════ */
-const PKG = {
-  BASE:4.99, PER_KM:0.95, MIN_TOTAL:6.99, PLATFORM_PCT:0.08,
-  SIZE_MULT:{envelope:1.00,small:1.15,medium:1.40,large:1.72},
-  URGENCY:{
-    flex3:    {mult:1.00,label:'Full Flexible',sub:'1–3 days',color:'#10B981'},
-    flextoday:{mult:1.28,label:'Same Day',    sub:'Today',    color:'#3B82F6'},
-    today4h:  {mult:1.62,label:'4-Hr Window', sub:'4hrs',     color:'#F59E0B'},
-    urgent:   {mult:2.05,label:'ASAP',        sub:'Fastest',  color:'#EF4444'},
-  },
-  DELIV_MULT:{window:1.00,flexible:0.90,priority:1.20},
-  COMP:{
-    purolator:(km)=>Math.round((14.99+km*1.45)*100)/100,
-    fedex:    (km)=>Math.round((16.50+km*1.60)*100)/100,
-  }
-};
-const RIDE={BASE_FARE:1.50,PER_KM:0.65,PER_MIN:0.18,AVG_SPEED:22,PLATFORM_PCT:0.12,MIN_PER_SEAT:4.00};
-
-function calcPackagePrice(km,size='small',tierId='flextoday',delivPref='window'){
-  const b=PKG.BASE, d=Math.round(km*PKG.PER_KM*100)/100;
-  const sm=PKG.SIZE_MULT[size]||1, um=PKG.URGENCY[tierId].mult, dm=PKG.DELIV_MULT[delivPref];
-  const sub=(b+d)*sm*um*dm, pf=Math.round(sub*PKG.PLATFORM_PCT*100)/100;
-  const total=Math.max(PKG.MIN_TOTAL,Math.round((sub+pf)*100)/100);
-  const sUp=Math.round((b+d)*(sm-1)*um*dm*100)/100;
-  const uUp=Math.round((b+d)*sm*(um-1)*dm*100)/100;
-  const dAdj=Math.round((b+d)*sm*um*(dm-1)*100)/100;
-  return{base:b,distCost:d,sizeMult:sm,urgMult:um,delivMult:dm,sizeUp:sUp,urgUp:uUp,delivAdj:dAdj,
-    platformFee:pf,subtotal:Math.round(sub*100)/100,total,km:Math.round(km*10)/10,
-    puro:PKG.COMP.purolator(km),fedex:PKG.COMP.fedex(km)};
-}
-function calcRidePrice(km,seats=1){
-  const b=RIDE.BASE_FARE,d=Math.round(km*RIDE.PER_KM*100)/100;
-  const mins=Math.round((km/RIDE.AVG_SPEED)*60),tc=Math.round(mins*RIDE.PER_MIN*100)/100;
-  const sub=b+d+tc,pf=Math.round(sub*RIDE.PLATFORM_PCT*100)/100;
-  const perSeat=Math.max(RIDE.MIN_PER_SEAT,Math.round((sub+pf)*100)/100);
-  const total=Math.round(perSeat*seats*100)/100;
-  const uberSeat=Math.round((2.50+km*0.89+mins*0.22)*100)/100;
-  return{base:b,distCost:d,timeCost:tc,estMins:mins,platformFee:pf,subtotal:Math.round(sub*100)/100,
-    perSeat,seats,total,km:Math.round(km*10)/10,
-    uberTotal:Math.round(uberSeat*seats*100)/100,savings:Math.max(0,Math.round((uberSeat-perSeat)*seats*100)/100)};
-}
-function renderPkgBreakdown(p,tierId){
-  const u=PKG.URGENCY[tierId];const uc=u.mult<=1?'ok':u.mult<=1.5?'warn':'bad';
-  return`<div class="price-box"><div class="price-box-hdr"><div class="price-box-title">📦 Price Breakdown</div><div class="price-box-total">$${p.total}</div></div>
-    <div class="pline"><span class="pline-lbl">Base fee</span><span class="pline-val">$${p.base.toFixed(2)}</span></div>
-    <div class="pline"><span class="pline-lbl">Distance (${p.km} km × $${PKG.PER_KM}/km)</span><span class="pline-val">$${p.distCost.toFixed(2)}</span></div>
-    ${p.sizeUp>0?`<div class="pline"><span class="pline-lbl">Size uplift <span class="pmult-badge">${p.sizeMult}×</span></span><span class="pline-val add">+$${p.sizeUp.toFixed(2)}</span></div>`:''}
-    ${p.urgUp>0?`<div class="pline"><span class="pline-lbl">${u.label} <span class="pmult-badge ${uc}">${u.mult}×</span></span><span class="pline-val add">+$${p.urgUp.toFixed(2)}</span></div>`:''}
-    ${p.delivAdj!==0?`<div class="pline"><span class="pline-lbl">Delivery adj.</span><span class="pline-val ${p.delivAdj<0?'disc':'add'}">${p.delivAdj<0?'-':'+'}$${Math.abs(p.delivAdj).toFixed(2)}</span></div>`:''}
-    <div class="pline"><span class="pline-lbl">Platform fee (${(PKG.PLATFORM_PCT*100).toFixed(0)}%)</span><span class="pline-val">$${p.platformFee.toFixed(2)}</span></div>
-    <div class="pline total-row"><span class="pline-lbl">Total</span><span class="pline-val">$${p.total}</span></div></div>`;
-}
-function renderRideBreakdown(r){
-  return`<div class="price-box"><div class="price-box-hdr"><div class="price-box-title">🚗 Fare Breakdown</div><div class="price-box-total">$${r.perSeat}/seat</div></div>
-    <div class="pline"><span class="pline-lbl">Base fare</span><span class="pline-val">$${r.base.toFixed(2)}</span></div>
-    <div class="pline"><span class="pline-lbl">Distance (${r.km} km × $${RIDE.PER_KM}/km)</span><span class="pline-val">$${r.distCost.toFixed(2)}</span></div>
-    <div class="pline"><span class="pline-lbl">Est. time (~${r.estMins} min × $${RIDE.PER_MIN}/min)</span><span class="pline-val">$${r.timeCost.toFixed(2)}</span></div>
-    <div class="pline"><span class="pline-lbl">Platform fee (${(RIDE.PLATFORM_PCT*100).toFixed(0)}%)</span><span class="pline-val">$${r.platformFee.toFixed(2)}</span></div>
-    <div class="pline total-row"><span class="pline-lbl">Per seat</span><span class="pline-val">$${r.perSeat}</span></div>
-    ${r.seats>1?`<div class="pline"><span class="pline-lbl">× ${r.seats} seats</span><span class="pline-val">$${r.total}</span></div>`:''}
-    ${r.savings>0?`<div class="pline" style="background:#ECFDF5"><span class="pline-lbl" style="color:#059669">💚 vs Uber (~$${r.uberTotal})</span><span class="pline-val disc">Save $${r.savings}</span></div>`:''}
-    </div>`;
-}
-
-/* ════════════════════════════════════════
-   PARCEL CATS + WINDOW DATA
-════════════════════════════════════════ */
-const PARCEL_CATS=[
-  {id:'documents',      label:'Documents',     icon:'📄',sub:'Papers, contracts, letters'},
-  {id:'small-parcel',   label:'Small Parcel',  icon:'📦',sub:'Under 2 kg, fits in bag'},
-  {id:'small-bag',      label:'Small Bag',     icon:'👜',sub:'Backpack-size or smaller'},
-  {id:'office-item',    label:'Office Item',   icon:'🗂️',sub:'Laptop, charger, gear'},
-  {id:'forgotten-item', label:'Forgotten Item',icon:'🔑',sub:'Keys, wallet, personal item'},
-];
-const CAT_SIZE={documents:'envelope','small-parcel':'small','small-bag':'small','office-item':'medium','forgotten-item':'envelope'};
-const WINDOWS={
-  westbound:[
-    {id:'morning-early',label:'6:30 – 7:00 AM',icon:'🌅',sub:'Earliest window'},
-    {id:'morning-mid',  label:'7:00 – 7:30 AM',icon:'☀️',sub:'Most popular'},
-    {id:'morning-late', label:'7:30 – 8:30 AM',icon:'🚦',sub:'Latest morning'},
-  ],
-  eastbound:[
-    {id:'evening-early',label:'2:30 – 3:30 PM',icon:'🕒',sub:'Early leavers'},
-    {id:'evening-mid',  label:'3:30 – 4:30 PM',icon:'🕓',sub:'Most popular'},
-    {id:'evening-late', label:'4:30 – 5:30 PM',icon:'🕔',sub:'Latest evening'},
-  ],
-};
-
-/* ════════════════════════════════════════
-   STATE
-════════════════════════════════════════ */
-const SS={originStop:null,destStop:null,direction:'westbound',window:null,tierId:'flextoday',
-  parcelCat:null,size:'small',dist:30,contents:'',recip:'',phone:'',notes:''};
-const ST={direction:'westbound',originStop:null,destStop:null,window:null,
-  days:['Mon','Tue','Wed','Thu','Fri'],recurring:true,vehicle:'car',pref:'both',
-  seats:2,parcelCap:'none',model:'',color:'',plate:'',detour:'2',hub:''};
-const PS={direction:'westbound',originStop:null,destStop:null,window:null,
-  seats:1,recurring:false,driver:null,km:30,customDate:'',customTime:'',customFlex:'0',hub:''};
-
-let delivPref='window',delivWindow='9am-12pm',activeMatch=null;
-let user=null,maps={},etaI=null,trkA=null,trkP=.45,dSeats=2,pSeats=1;
-let pTimeMode='preset',pFlex='0';
-const segState={};
-const CHAT=[
-  {f:'m',t:"Hey! Picked up your parcel — on HWY 1 now 🚗",ts:'7:28 AM'},
-  {f:'u',t:"Thanks! Traffic okay?",ts:'7:29 AM'},
-  {f:'m',t:'All clear. Should be North Van by 8:05 AM 👍',ts:'7:31 AM'},
-];
-
-/* ════════════════════════════════════════
-   AUTH FUNCTIONS — Supabase production-ready foundation
-════════════════════════════════════════ */
-const SUPABASE_URL = 'https://frwuvmjxjmnhucrkjwvn.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3V2bWp4am1uaHVjcmtqd3ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjY2NTEsImV4cCI6MjA5Mjc0MjY1MX0.oDiUZN2bUqgcg6_LoP4Bblpm4zzu7D23K2FyfAlvDzw';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let authMode = 'in';
-
-function switchAuthTab(tab){
-  authMode = tab;
-  document.getElementById('auth-tab-in').classList.toggle('on', tab==='in');
-  document.getElementById('auth-tab-up').classList.toggle('on', tab==='up');
-  const note=document.getElementById('auth-signup-note');
-  if(note) note.style.display = tab==='up' ? 'block' : 'none';
-  const emailBtn=document.getElementById('auth-email-btn-label');
-  if(emailBtn) emailBtn.textContent = tab==='up' ? 'Create Account with Email' : 'Continue with Email';
-}
-
-function cleanNameFromEmail(email){
-  return (email || 'there').split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-}
-
-async function setUserFromSession(session){
-  const authUser = session?.user;
-  if(!authUser){
-    user=null;
-    localStorage.removeItem('cr_u');
-    go('sa');
-    return;
-  }
-  user = {
-    id: authUser.id,
-    email: authUser.email || '',
-    phone: authUser.phone || '',
-    name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || cleanNameFromEmail(authUser.email || authUser.phone)
-  };
-  localStorage.setItem('cr_u', JSON.stringify(user));
-  const hn=document.getElementById('home-name');
-  if(hn) hn.textContent=user.name||'there';
-  go('sh');
-}
-
-async function emailSignIn(){
-  const e=document.getElementById('auth-email').value.trim().toLowerCase();
-  if(!e || !/^\S+@\S+\.\S+$/.test(e)){toast('Enter a valid email address');return}
-  if(!supabaseClient){toast('Supabase library failed to load');return}
-  const label=document.getElementById('auth-email-btn-label');
-  const old=label?.textContent || 'Continue with Email';
-  if(label) label.textContent='Sending secure link…';
-  const { error } = await supabaseClient.auth.signInWithOtp({
-    email:e,
-    options:{
-      emailRedirectTo: window.location.origin,
-      data:{ app:'couride', signup_mode:authMode }
-    }
-  });
-  if(label) label.textContent=old;
-  if(error){toast('Auth error: '+error.message,5000);return}
-  toast('Check your email for the secure login link ✅',5000);
-}
-
-async function oauthLogin(provider){
-  if(!supabaseClient){toast('Supabase library failed to load');return}
-  const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider,
-    options:{ redirectTo: window.location.origin }
-  });
-  if(error) toast(provider+' login error: '+error.message,5000);
-}
-function googleSignIn(){oauthLogin('google')}
-function facebookSignIn(){oauthLogin('facebook')}
-function xSignIn(){oauthLogin('twitter')}
-function appleSignIn(){oauthLogin('apple')}
-
-async function phoneSignIn(){
-  const p=document.getElementById('auth-phone').value.trim();
-  if(!p || p.replace(/[\s\-\+\(\)]/g,'').length < 7){toast('Enter a valid phone number with country code');return}
-  if(!supabaseClient){toast('Supabase library failed to load');return}
-  const btn=document.getElementById('send-otp-btn');
-  const old=btn?.textContent || 'Send Verification Code';
-  if(btn){btn.textContent='Sending…';btn.disabled=true}
-  const { error } = await supabaseClient.auth.signInWithOtp({ phone:p });
-  if(btn){btn.textContent=old;btn.disabled=false}
-  if(error){
-    toast('Phone OTP needs Supabase SMS provider setup: '+error.message,6500);
-    return;
-  }
-  const otpSec=document.getElementById('otp-section');
-  if(otpSec) otpSec.style.display='block';
-  toast('Verification code sent ✅');
-}
-
-async function verifyOtp(){
-  const phone=document.getElementById('auth-phone').value.trim();
-  const token=document.getElementById('auth-otp').value.trim();
-  if(!phone){toast('Enter your phone number first');return}
-  if(!token || token.length < 4){toast('Enter the verification code');return}
-  if(!supabaseClient){toast('Supabase library failed to load');return}
-  const { data, error } = await supabaseClient.auth.verifyOtp({ phone, token, type:'sms' });
-  if(error){toast('Verification failed: '+error.message,5000);return}
-  await setUserFromSession(data.session);
-  toast('Phone verified ✅');
-}
-
-async function signOut(){
-  localStorage.removeItem('cr_u');
-  if(supabaseClient) await supabaseClient.auth.signOut();
-  user=null;
-  go('sa');
-  toast('Signed out');
-}
-
-async function bootAuth(){
-  if(!supabaseClient){
-    const saved=localStorage.getItem('cr_u');
-    if(saved){user=JSON.parse(saved);document.getElementById('home-name').textContent=user.name||'there';go('sh')}
-    else go('sa');
-    return;
-  }
-  const { data } = await supabaseClient.auth.getSession();
-  if(data?.session) await setUserFromSession(data.session); else go('sa');
-  supabaseClient.auth.onAuthStateChange((_event, session)=>{ if(session) setUserFromSession(session); });
-}
-
-/* ════════════════════════════════════════
-   NAVIGATION
-════════════════════════════════════════ */
-function go(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const s=document.getElementById(id);if(!s)return;
-  s.classList.add('active');
-  if(id==='sm'&&!maps.match)setTimeout(initMatchMap,80);
-  if(id==='stk'){setTimeout(initTrackMap,80);startEta()}else stopEta();
-  if(id==='ss1')initSenderStep1();
-  if(id==='ss2')setupSender2();
-  if(id==='ss4')setupSender4();
-  if(id==='sp1')initRiderStep1();
-  if(id==='sp2')renderRideListings();
-  if(id==='sp3')setupRideConfirm();
-  if(id==='st1')initDriverStep1();
-  if(id==='st2')initDriverStep2();
-  if(id==='st4')renderDriverMatches();
-  if(id==='sdp')updateDelivPrefPricing();
-  if(id==='sm'){updateMatchScreen()}
-  if(id==='stk')updateTrackingScreen();
-  if(id==='sc')renderChat();
-}
-
-/* ════════════════════════════════════════
-   STOP SELECTOR RENDERER
-════════════════════════════════════════ */
-function renderStops(containerId, stops, stateObj, stateKey, onSelect){
-  const c=document.getElementById(containerId);if(!c)return;
-  c.innerHTML=stops.map(st=>`
-    <div class="stop-item ${stateObj[stateKey]===st.id?'on':''}" onclick="selStop('${containerId}','${st.id}',this)">
-      <span class="stop-ico">${st.icon}</span>
-      <div><div class="stop-name">${st.label}</div><div class="stop-sub">${st.sub}</div></div>
-      <div class="stop-chk">✓</div>
-    </div>`).join('');
-  c._onSelect=onSelect;c._stops=stops;c._state=[stateObj,stateKey];
-}
-
-function selStop(containerId,stopId,el){
-  const c=document.getElementById(containerId);if(!c)return;
-  c.querySelectorAll('.stop-item').forEach(i=>i.classList.remove('on'));
-  el.classList.add('on');
-  const [stateObj,stateKey]=c._state;
-  stateObj[stateKey]=stopId;
-  if(c._onSelect)c._onSelect(stopId);
-}
-
-/* ════════════════════════════════════════
-   WINDOW CARD RENDERER
-════════════════════════════════════════ */
-function renderWindowCards(containerId,direction,stateObj,stateKey){
-  const c=document.getElementById(containerId);if(!c)return;
-  const ws=WINDOWS[direction]||WINDOWS.westbound;
-  c.innerHTML=ws.map(w=>`
-    <div class="win-card ${stateObj[stateKey]===w.id?'on':''}" onclick="selWindow2('${containerId}','${w.id}',this)">
-      <div><div class="win-lbl">${w.label}</div><div class="win-sub">${w.sub}</div></div>
-      <span class="win-ico">${w.icon}</span>
-    </div>`).join('');
-}
-function selWindow2(cId,wId,el){
-  document.getElementById(cId).querySelectorAll('.win-card').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  const MAP={'s-windows':[SS,'window'],'p-windows':[PS,'window'],'t-windows':[ST,'window']};
-  if(MAP[cId]){MAP[cId][0][MAP[cId][1]]=wId}
-}
-
-/* ════════════════════════════════════════
-   TIME MODE
-════════════════════════════════════════ */
-function setTimeMode(mode){
-  pTimeMode=mode;
-  document.getElementById('tmode-preset').classList.toggle('on',mode==='preset');
-  document.getElementById('tmode-custom').classList.toggle('on',mode==='custom');
-  document.getElementById('p-preset-section').style.display=mode==='preset'?'block':'none';
-  document.getElementById('p-custom-section').style.display=mode==='custom'?'block':'none';
-}
-
-/* ════════════════════════════════════════
-   CORRIDOR MAP ANIMATION
-════════════════════════════════════════ */
-function updateCorridorArrow(dir){
-  const a=document.getElementById('corr-arrow');if(!a)return;
-  if(dir==='eastbound'){a.classList.add('east');a.textContent='←'}
-  else{a.classList.remove('east');a.textContent='→'}
-}
-
-/* ════════════════════════════════════════
-   WINDOW STATUS
-════════════════════════════════════════ */
-function getWindowStatus(){
-  const n=new Date(),h=n.getHours(),m=n.getMinutes(),day=n.getDay();
-  const isWD=day>=1&&day<=5,t=h*60+m;
-  if(!isWD)return{cls:'wi-inactive',dotCls:'wi-dot-off',label:'No service · Weekdays only'};
-  if(t>=390&&t<510)return{cls:'wi-active',dotCls:'wi-dot-active',label:'🟢 Morning window ACTIVE · 6:30–8:30 AM'};
-  if(t>=870&&t<1050)return{cls:'wi-active',dotCls:'wi-dot-active',label:'🟢 Evening window ACTIVE · 2:30–5:30 PM'};
-  if(t<390)return{cls:'wi-upcoming',dotCls:'wi-dot-upcoming',label:'Next: Morning window opens at 6:30 AM'};
-  if(t>=510&&t<870)return{cls:'wi-upcoming',dotCls:'wi-dot-upcoming',label:'Next: Evening window opens at 2:30 PM'};
-  return{cls:'wi-inactive',dotCls:'wi-dot-off',label:'Windows closed · Resumes Mon 6:30 AM'};
-}
-
-/* ════════════════════════════════════════
-   SENDER FLOW
-════════════════════════════════════════ */
-function initSenderStep1(){
-  const cg=document.getElementById('cat-grid');
-  if(cg)cg.innerHTML=PARCEL_CATS.map(c=>`<div class="cat-card ${SS.parcelCat===c.id?'on':''}" onclick="selCat('${c.id}',this)"><div class="cat-ico">${c.icon}</div><div class="cat-name">${c.label}</div><div class="cat-sub">${c.sub}</div></div>`).join('');
-  renderStops('s-origin-stops', originsFor(SS.direction), SS, 'originStop', (id)=>{
-    SS.destStop=null;
-    renderStops('s-dest-stops', destsFor(SS.direction,id), SS, 'destStop', ()=>updateSenderDist());
-  });
-  renderStops('s-dest-stops', SS.originStop?destsFor(SS.direction,SS.originStop):[], SS, 'destStop', ()=>updateSenderDist());
-  renderWindowCards('s-windows','westbound',SS,'window');
-}
-function updateSenderDist(){
-  if(SS.originStop&&SS.destStop){
-    const oi=STOP_IDS.indexOf(SS.originStop),di=STOP_IDS.indexOf(SS.destStop);
-    SS.dist=Math.abs(oi-di)*10+8; // rough corridor km estimate per zone gap
-  }
-}
-function selCat(id,el){document.getElementById('cat-grid').querySelectorAll('.cat-card').forEach(c=>c.classList.remove('on'));el.classList.add('on');SS.parcelCat=id;SS.size=CAT_SIZE[id]||'small'}
-function sNext1(){
-  if(!SS.parcelCat){toast('Select what you are sending');return}
-  if(!SS.originStop){toast('Select your pickup stop');return}
-  if(!SS.destStop){toast('Select your delivery stop');return}
-  if(!SS.window){toast('Select a commute window');return}
-  updateSenderDist();go('ss2');
-}
-function setupSender2(){
-  const os=CORRIDOR_STOPS.find(s=>s.id===SS.originStop),ds=CORRIDOR_STOPS.find(s=>s.id===SS.destStop);
-  document.getElementById('s2-from').textContent=os?os.label:'—';
-  document.getElementById('s2-to').textContent=ds?ds.label:'—';
-  document.getElementById('s2-cat').textContent=PARCEL_CATS.find(c=>c.id===SS.parcelCat)?.label||'—';
-  document.getElementById('s2-dist').textContent='~'+SS.dist+' km';
-  const p=calcPackagePrice(SS.dist,SS.size,SS.tierId,'window');
-  document.getElementById('c-puro').textContent=p.puro;
-  document.getElementById('c-fedex').textContent=p.fedex;
-  document.getElementById('c-us').textContent=p.total;
-  renderTiers();
-}
-function renderTiers(){
-  document.getElementById('tgrid').innerHTML=Object.entries(PKG.URGENCY).map(([id,u])=>{
-    const p=calcPackagePrice(SS.dist,SS.size,id,'window');
-    return`<div class="tc ${SS.tierId===id?'on':''}" onclick="selTier('${id}')"><div class="tc-l" style="color:${u.color}">${u.label}</div><div class="tc-s">${u.sub}</div><div class="tc-p">$${p.total}</div></div>`;
-  }).join('');
-  const p=calcPackagePrice(SS.dist,SS.size,SS.tierId,'window');
-  document.getElementById('price-breakdown').style.display='block';
-  document.getElementById('price-breakdown').innerHTML=renderPkgBreakdown(p,SS.tierId);
-  document.getElementById('c-us').textContent=p.total;
-}
-function selTier(id){SS.tierId=id;renderTiers()}
-function sNext3(){
-  const r=document.getElementById('s-recip').value.trim();
-  if(!r){toast('Add recipient name');return}
-  SS.recip=r;SS.phone=document.getElementById('s-phone').value;SS.notes=document.getElementById('s-notes').value;go('ss4');
-}
-function setupSender4(){
-  const os=CORRIDOR_STOPS.find(s=>s.id===SS.originStop),ds=CORRIDOR_STOPS.find(s=>s.id===SS.destStop);
-  const win=WINDOWS[SS.direction]?.find(w=>w.id===SS.window);
-  document.getElementById('s4-from').textContent=os?os.label:'—';
-  document.getElementById('s4-to').textContent=ds?ds.label:'—';
-  document.getElementById('s4-cat').textContent=PARCEL_CATS.find(c=>c.id===SS.parcelCat)?.label||'—';
-  document.getElementById('s4-win').textContent=win?.label||'—';
-  document.getElementById('s4-recip').textContent=SS.recip||'—';
-  const p=calcPackagePrice(SS.dist,SS.size,SS.tierId,'window');
-  document.getElementById('s4-receipt').innerHTML=renderPkgBreakdown(p,SS.tierId);
-  document.getElementById('s4-btn-t').textContent='$'+p.total;
-}
-async function submitSender(){
-  const btn=document.getElementById('s4-btn');btn.textContent='⏳ Matching…';btn.disabled=true;
-  const p=calcPackagePrice(SS.dist,SS.size,SS.tierId,'window');
-  setTimeout(()=>{btn.innerHTML='🚀 Send Parcel · <span id="s4-btn-t">$'+p.total+'</span>';btn.disabled=false;toast('✅ Parcel registered! Finding a corridor driver…');setTimeout(()=>go('sm'),1200)},1400);
-}
-
-/* ════════════════════════════════════════
-   RIDER FLOW
-════════════════════════════════════════ */
-function initRiderStep1(){
-  updateCorridorArrow(PS.direction);
-  renderStops('p-origin-stops', originsFor(PS.direction), PS, 'originStop', (id)=>{
-    PS.destStop=null;
-    const destSec=document.getElementById('p-dest-section');if(destSec)destSec.style.display='none';
-    const hubSec=document.getElementById('p-hub-section');if(hubSec)hubSec.style.display='none';
-    renderStops('p-dest-stops', destsFor(PS.direction,id), PS, 'destStop', ()=>{
-      const ds=document.getElementById('p-dest-section');if(ds)ds.style.display='block';
-      const hs=document.getElementById('p-hub-section');if(hs)hs.style.display='block';
-      PS.km=calcKmBetween(PS.originStop,PS.destStop);
-    });
-    const ds=document.getElementById('p-dest-section');if(ds)ds.style.display='block';
-  });
-  renderWindowCards('p-windows',PS.direction,PS,'window');
-  const cd=document.getElementById('p-custom-date');
-  if(cd&&!cd.value)cd.value=new Date().toISOString().split('T')[0];
-}
-
-function calcKmBetween(a,b){
-  const ai=STOP_IDS.indexOf(a),bi=STOP_IDS.indexOf(b);
-  return Math.abs(ai-bi)*10+8;
-}
-
-function selRiderDir(dir){
-  PS.direction=dir;PS.originStop=null;PS.destStop=null;PS.window=null;
-  document.getElementById('pdir-west').classList.toggle('on',dir==='westbound');
-  document.getElementById('pdir-east').classList.toggle('on',dir==='eastbound');
-  updateCorridorArrow(dir);
-  const ds=document.getElementById('p-dest-section');if(ds)ds.style.display='none';
-  const hs=document.getElementById('p-hub-section');if(hs)hs.style.display='none';
-  renderStops('p-origin-stops', originsFor(dir), PS, 'originStop', (id)=>{
-    PS.destStop=null;
-    renderStops('p-dest-stops', destsFor(dir,id), PS, 'destStop', ()=>{
-      const d=document.getElementById('p-dest-section');if(d)d.style.display='block';
-      const h=document.getElementById('p-hub-section');if(h)h.style.display='block';
-      PS.km=calcKmBetween(PS.originStop,PS.destStop);
-    });
-    const d=document.getElementById('p-dest-section');if(d)d.style.display='block';
-  });
-  renderWindowCards('p-windows',dir,PS,'window');
-}
-
-function adjSeats(d){pSeats=Math.max(1,Math.min(4,pSeats+d));document.getElementById('p-seats').textContent=pSeats}
-
-function pNext1(){
-  if(!PS.originStop){toast('Select your pickup stop');return}
-  if(!PS.destStop){toast('Select your dropoff stop');return}
-  if(pTimeMode==='preset'&&!PS.window){toast('Select a commute window');return}
-  if(pTimeMode==='custom'){
-    const cd=document.getElementById('p-custom-date')?.value;
-    const ct=document.getElementById('p-custom-time')?.value;
-    if(!cd){toast('Select a travel date');return}
-    if(!ct){toast('Select a preferred departure time');return}
-    PS.customDate=cd;PS.customTime=ct;PS.customFlex=pFlex;PS.window=null;
-  }
-  PS.seats=pSeats;
-  PS.hub=document.getElementById('p-hub')?.value||'';
-  PS.km=calcKmBetween(PS.originStop,PS.destStop);
-  go('sp2');
-}
-
-/* ════════════════════════════════════════
-   RIDER LISTINGS — dynamic ranked matching
-   Dev K. bug FIXED: originalIdx preserved before spread
-════════════════════════════════════════ */
-function renderRideListings(){
-  const os=CORRIDOR_STOPS.find(s=>s.id===PS.originStop);
-  const ds=CORRIDOR_STOPS.find(s=>s.id===PS.destStop);
-  const win=WINDOWS[PS.direction]?.find(w=>w.id===PS.window);
-  document.getElementById('p2-from-label').textContent=(os?.label||'—')+' → '+(ds?.label||'—');
-  document.getElementById('p2-window-label').textContent=
-    pTimeMode==='custom'?(PS.customDate||'—')+' · '+(PS.customTime||'—')+(PS.customFlex!=='0'?' ±'+PS.customFlex+'min':''):win?.label||'—';
-
-  const req={direction:PS.direction,originStop:PS.originStop,destStop:PS.destStop,
-    window:PS.window,customTime:PS.customTime,seats:PS.seats,recurring:PS.recurring};
-
-  // ✅ Store originalIdx BEFORE spread — this is the Dev K. bug fix
-  const scored = CORRIDOR_DRIVERS
-    .map((d, originalIdx) => ({ ...d, originalIdx, matchResult: scoreRideMatch(d, req) }))
-    .filter(d => d.matchResult.score > 0)
-    .sort((a, b) => b.matchResult.score - a.matchResult.score);
-
-  document.getElementById('p2-count').textContent=
-    scored.length + ' corridor-matched driver' + (scored.length!==1?'s':'') + ' · Ranked by match quality';
-
-  if(scored.length===0){
-    document.getElementById('ride-listings').innerHTML=`<div style="text-align:center;padding:32px 16px;color:var(--mu)"><div style="font-size:32px;margin-bottom:10px">🔍</div><div style="font-weight:700;margin-bottom:6px">No matches yet on this leg</div><div style="font-size:13px;line-height:1.6">Try an adjacent stop or different window. More drivers join daily.</div></div>`;
-    return;
-  }
-
-  document.getElementById('ride-listings').innerHTML = scored.map((d, i) => {
-    const r = calcRidePrice(d.km, PS.seats);
-    const m = d.matchResult;
-    const isFirst = i === 0;
-    return `<div class="drv-card ${isFirst?'highlighted':''}" onclick="selDriver(${d.originalIdx})">
-      <div class="drv-top">
-        <div class="dav">${d.av}<div class="vbadge">✓</div></div>
-        <div style="flex:1">
-          <div class="dname">${d.name}</div>
-          <div class="dsub">${d.stats}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:20px;font-weight:900;color:var(--blue)">$${r.perSeat}</div>
-          <div style="font-size:10px;color:var(--mu);font-weight:600">per seat</div>
-        </div>
-      </div>
-      <div class="drv-mid">
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:8px">
-          <span class="tier-badge ${m.tierCls}">${m.tierLabel}</span>
-          <span style="color:var(--mu)">🕐 ${d.windowLabel}</span>
-          <span style="font-weight:700;color:var(--ok)">${d.seats} seat${d.seats!==1?'s':''}</span>
-        </div>
-        <div class="match-reason">${m.reason}</div>
-        <div style="margin-top:8px">
-          <div class="rp" style="margin-bottom:4px"><div class="rdot"></div><div class="rt">${CORRIDOR_STOPS.find(s=>s.id===d.originStop)?.label||'—'}</div></div>
-          <div class="rp"><div class="rdot e"></div><div class="rt">${CORRIDOR_STOPS.find(s=>s.id===d.destStop)?.label||'—'}</div></div>
-        </div>
-      </div>
-      <div class="drv-bot">
-        <span style="font-size:12px">🚗 ${d.car}</span>
-        <div class="vplate">${d.plate}</div>
-        <span class="tag tg" style="margin-left:auto">🔄 ${d.days}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function selDriver(i){
-  // i is originalIdx — guaranteed correct
-  PS.driver=CORRIDOR_DRIVERS[i];
-  if(!PS.driver){toast('Driver data error');return}
-  PS.km=calcKmBetween(PS.originStop||PS.driver.originStop, PS.destStop||PS.driver.destStop);
-  PS.ridePrice=calcRidePrice(PS.km,PS.seats);
-  go('sp3');
-}
-
-function setupRideConfirm(){
-  if(!PS.driver)return;
-  const r=PS.ridePrice||calcRidePrice(PS.km||30,PS.seats||1);
-  const d=PS.driver;
-  const os=CORRIDOR_STOPS.find(s=>s.id===d.originStop);
-  const ds=CORRIDOR_STOPS.find(s=>s.id===d.destStop);
-  const ros=CORRIDOR_STOPS.find(s=>s.id===PS.originStop);
-  const rds=CORRIDOR_STOPS.find(s=>s.id===PS.destStop);
-  // Standard confirm fields
-  document.getElementById('rc-av').textContent=d.av;
-  document.getElementById('rc-name').textContent=d.name;
-  document.getElementById('rc-stats').textContent=d.stats;
-  document.getElementById('rc-car').textContent=d.car;
-  document.getElementById('rc-plate').textContent=d.plate;
-  document.getElementById('rc-time').textContent=d.windowLabel;
-  document.getElementById('rc-days').textContent=d.days;
-  document.getElementById('rc-from').textContent=(os?.label||'—')+' zone';
-  document.getElementById('rc-to').textContent=(ds?.label||'—')+' zone';
-  document.getElementById('rc-seats').textContent=PS.seats;
-  document.getElementById('rc-price').textContent='$'+r.total;
-  document.getElementById('rc-btn-t').textContent='$'+r.total;
-  document.getElementById('rc-breakdown').innerHTML=renderRideBreakdown(r);
-  // Pickup/dropoff clarity
-  document.getElementById('rc-pickup-stop').textContent=ros?.label||'—';
-  const hubEl=document.getElementById('rc-pickup-hub');
-  if(hubEl)hubEl.textContent=PS.hub?'Your point: '+PS.hub:'No specific point set — confirm with driver in chat';
-  document.getElementById('rc-dropoff-stop').textContent=rds?.label||'—';
-  document.getElementById('rc-driver-hub').textContent=d.pickupHub||'Contact driver to confirm';
-  const detourEl=document.getElementById('rc-detour');
-  if(detourEl)detourEl.textContent='Up to '+d.maxDetourKm+' km off route';
-  const detourNote=document.getElementById('rc-detour-note');
-  if(detourNote)detourNote.textContent=d.maxDetourKm>=5?'Flexible — door-to-door may be possible':'Hub-based preferred';
-}
-
-async function confirmRide(){
-  const btn=document.getElementById('rc-btn');btn.textContent='⏳ Confirming…';btn.disabled=true;
-  setTimeout(()=>{toast('🎉 Booked! '+PS.driver?.name+' will confirm your pickup hub in chat.');setTimeout(()=>go('sm'),1200)},1400);
-}
-
-/* ════════════════════════════════════════
-   DRIVER FLOW
-════════════════════════════════════════ */
-function initDriverStep1(){
-  renderStops('t-origin-stops', originsFor(ST.direction), ST, 'originStop', ()=>{
-    renderStops('t-dest-stops', destsFor(ST.direction,ST.originStop), ST, 'destStop', ()=>{});
-  });
-  renderStops('t-dest-stops', ST.originStop?destsFor(ST.direction,ST.originStop):[], ST, 'destStop', ()=>{});
-  document.getElementById('tdir-west').classList.toggle('on',ST.direction==='westbound');
-  document.getElementById('tdir-east').classList.toggle('on',ST.direction==='eastbound');
-}
-function selDriverDir(dir){
-  ST.direction=dir;ST.originStop=null;ST.destStop=null;
-  document.getElementById('tdir-west').classList.toggle('on',dir==='westbound');
-  document.getElementById('tdir-east').classList.toggle('on',dir==='eastbound');
-  renderStops('t-origin-stops', originsFor(dir), ST, 'originStop', (id)=>{
-    renderStops('t-dest-stops', destsFor(dir,id), ST, 'destStop', ()=>{});
-  });
-  renderStops('t-dest-stops', [], ST, 'destStop', ()=>{});
-}
-function tNext1(){
-  if(!ST.originStop){toast('Select your starting stop');return}
-  if(!ST.destStop){toast('Select your destination stop');return}
-  ST.hub=document.getElementById('t-hub')?.value||'';
-  go('st2');
-}
-function initDriverStep2(){
-  renderWindowCards('t-windows',ST.direction,ST,'window');
-  const days=['Mon','Tue','Wed','Thu','Fri'];
-  const dr=document.getElementById('t-days');
-  if(dr)dr.innerHTML=days.map(d=>`<div style="width:40px;height:40px;border-radius:50%;border:1.5px solid var(--bdr);background:${ST.days.includes(d)?'var(--blue)':'#fff'};color:${ST.days.includes(d)?'#fff':'var(--tx)'};font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s" onclick="toggleDay('${d}',this)">${d.slice(0,1)}</div>`).join('');
-  const km=ST.originStop&&ST.destStop?calcKmBetween(ST.originStop,ST.destStop):30;
-  const lo=Math.round(calcPackagePrice(km,'small','flex3','flexible').total*0.85);
-  const hi=Math.round(calcPackagePrice(km,'medium','urgent','priority').total*0.85);
-  document.getElementById('earn-pot').textContent='$'+lo+' – $'+hi+' / trip';
-}
-function toggleDay(d,el){
-  const on=el.style.background.includes('var(--blue)');
-  el.style.background=on?'#fff':'var(--blue)';
-  el.style.color=on?'var(--tx)':'#fff';
-  if(on)ST.days=ST.days.filter(x=>x!==d); else ST.days.push(d);
-}
-function tNext2(){
-  if(!ST.window){toast('Select a departure window');return}
-  if(!ST.days.length){toast('Select at least one day');return}
-  go('st3');
-}
-function selVeh(el,v){document.querySelectorAll('.vc').forEach(c=>c.classList.remove('on'));el.classList.add('on');ST.vehicle=v}
-function selPref(el,p){document.querySelectorAll('.pc').forEach(c=>c.classList.remove('on'));el.classList.add('on');ST.pref=p}
-function adjDSeats(d){dSeats=Math.max(0,Math.min(6,dSeats+d));document.getElementById('t-seats').textContent=dSeats}
-
-function renderDriverMatches(){
-  const km=ST.originStop&&ST.destStop?calcKmBetween(ST.originStop,ST.destStop):30;
-  const MOCK=[
-    {type:'parcel',icon:'📄',label:'Documents',from:'Surrey',to:'North Shore',km:38,size:'envelope',tier:'flextoday',detour:'On route'},
-    {type:'seat',icon:'👤',label:'1 passenger',from:'Langley',to:'Burnaby',km:30,seats:1,detour:'On route'},
-    {type:'parcel',icon:'📦',label:'Small Parcel',from:'Abbotsford',to:'Burnaby',km:68,size:'small',tier:'flex3',detour:'On route'},
-  ];
-  document.getElementById('driver-match-list').innerHTML=MOCK.map((r,i)=>{
-    let earn;
-    if(r.type==='parcel'){earn=Math.round(calcPackagePrice(r.km,r.size,r.tier,'window').total*0.85)}
-    else{earn=Math.round(calcRidePrice(r.km,r.seats||1).total*0.85)}
-    return`<div style="background:#fff;border-radius:var(--r);border:1.5px solid var(--bdr);padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s" onclick="selMatch(${i})" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--bdr)'">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:42px;height:42px;border-radius:var(--rs);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${r.icon}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">${r.from} → ${r.to}</div><div style="font-size:11px;color:var(--mu);margin-top:2px">${r.label} · ~${r.km} km</div></div>
-        <div style="font-size:17px;font-weight:900;color:var(--blue)">$${earn}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag tg">${r.detour}</span><span class="tag tb">${r.type==='parcel'?'Package':'Passenger'}</span></div>
-    </div>`;
-  }).join('');
-}
-function selMatch(i){activeMatch={km:30,type:'parcel',size:'small',tier:'flextoday'};delivPref='window';updateDelivPrefPricing();go('sdp')}
-function registerRouteOnly(){toast("🗺️ Route registered! We'll notify you when requests arrive on your corridor.");go('sh')}
-
-/* ════════════════════════════════════════
-   DELIVERY PREFERENCE
-════════════════════════════════════════ */
-function selDelivPref(pref){
-  delivPref=pref;
-  ['window','flexible','priority'].forEach(p=>document.getElementById('dp-'+p)?.classList.toggle('on',p===pref));
-  updateDelivPrefPricing();
-}
-function selWindowSlot(e,el,slot){
-  e.stopPropagation();delivWindow=slot;
-  document.querySelectorAll('#window-slots .pill').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');selDelivPref('window');
-}
-function updateDelivPrefPricing(){
-  const m=activeMatch||{km:30,type:'parcel',size:'small',tier:'flextoday'};
-  let earn=0;
-  if(m.type==='pkg'||m.type==='parcel'){earn=Math.round(calcPackagePrice(m.km,'small',m.tier||'flextoday',delivPref).total*0.85*100)/100}
-  else{earn=Math.round(calcRidePrice(m.km||30,m.seats||1).total*0.85*100)/100}
-  document.getElementById('dp-earn-final').textContent='$'+earn;
-  const notes={window:'Standard rate applied',flexible:'−10% · Sender saves on cost',priority:'+20% · You earn more'};
-  document.getElementById('dp-earn-note').textContent=notes[delivPref];
-  document.getElementById('dp-earn-sub').textContent=
-    delivPref==='priority'?'Fastest route · Minimum stops':
-    delivPref==='flexible'?'Deliver anytime during your commute window':
-    'Deliver during: '+(delivWindow.replace('-',' – ').replace('am',' AM').replace('pm',' PM'));
-}
-function confirmDelivPref(){toast('✅ Accepted! Chat with the sender for pickup details.');go('sm')}
-
-/* ════════════════════════════════════════
-   MATCH + TRACKING BADGES
-════════════════════════════════════════ */
-const BADGE_CFG={window:{cls:'window',icon:'🕐',label:'Time Window'},flexible:{cls:'flexible',icon:'🔄',label:'Flexible — anytime this commute'},priority:{cls:'priority',icon:'⚡',label:'Priority — straight through'}};
-function delivBadgeHTML(){const c=BADGE_CFG[delivPref];return`<div class="deliv-badge ${c.cls}">${c.icon} ${c.label}</div>`}
-function updateMatchScreen(){
-  const b=document.getElementById('match-deliv-badge');if(b)b.innerHTML=delivBadgeHTML();
-  const p=calcPackagePrice(SS.dist||PS.km||30,SS.size||'small',SS.tierId||'flextoday',delivPref);
-  document.getElementById('match-total').textContent='$'+p.total;
-}
-function updateTrackingScreen(){const b=document.getElementById('trk-deliv-badge');if(b)b.innerHTML=delivBadgeHTML()}
-
-/* ════════════════════════════════════════
-   MAPS
-════════════════════════════════════════ */
-const C1=[49.1878,-122.8450],C2=[49.3210,-123.0680];
-function mkDot(c){return L.divIcon({html:`<div style="width:14px;height:14px;background:${c};border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.25)"></div>`,className:'',iconAnchor:[7,7]})}
-function initMatchMap(){
-  const el=document.getElementById('map-match');if(!el||maps.match)return;
-  maps.match=L.map('map-match',{zoomControl:false,scrollWheelZoom:false});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(maps.match);
-  const mid=[(C1[0]+C2[0])/2+.01,(C1[1]+C2[1])/2];
-  L.marker(C1,{icon:mkDot('#1747F5')}).addTo(maps.match).bindPopup('📦 Pickup zone');
-  L.marker(C2,{icon:mkDot('#EF4444')}).addTo(maps.match).bindPopup('🏁 Delivery zone');
-  L.marker(mid,{icon:L.divIcon({html:'<div style="background:#1747F5;color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:3px solid #fff;box-shadow:0 4px 16px rgba(23,71,245,.4)">MK</div>',className:'',iconAnchor:[17,17]})}).addTo(maps.match);
-  L.polyline([C1,mid,C2],{color:'#1747F5',weight:3,opacity:.65,dashArray:'8,6'}).addTo(maps.match);
-  maps.match.fitBounds([C1,C2],{padding:[28,28]});
-  setTimeout(()=>maps.match.invalidateSize(),150);
-}
-let courierMk=null;
-function initTrackMap(){
-  const el=document.getElementById('map-track');if(!el)return;
-  if(maps.track){setTimeout(()=>maps.track.invalidateSize(),100);return}
-  maps.track=L.map('map-track',{zoomControl:false,scrollWheelZoom:false});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(maps.track);
-  L.marker(C1,{icon:mkDot('#10B981')}).addTo(maps.track);
-  L.marker(C2,{icon:mkDot('#EF4444')}).addTo(maps.track);
-  L.polyline([C1,C2],{color:'#1747F5',weight:3,opacity:.4,dashArray:'7,5'}).addTo(maps.track);
-  courierMk=L.marker(lrp(C1,C2,trkP),{icon:L.divIcon({html:'<div style="background:#1747F5;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:19px;border:3px solid #fff;box-shadow:0 4px 16px rgba(23,71,245,.4)">🚗</div>',className:'',iconAnchor:[19,19]})}).addTo(maps.track);
-  maps.track.fitBounds([C1,C2],{padding:[32,32]});
-  if(trkA)clearInterval(trkA);
-  trkA=setInterval(()=>{trkP=Math.min(1,trkP+.002);if(courierMk)courierMk.setLatLng(lrp(C1,C2,trkP));if(trkP>=1){clearInterval(trkA);setTimeout(()=>toast('📦 Delivered to North Shore!'),400)}},600);
-  setTimeout(()=>maps.track.invalidateSize(),150);
-}
-function lrp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
-
-/* ════════════════════════════════════════
-   ETA + CHAT
-════════════════════════════════════════ */
-let etaSec=22*60;
-function startEta(){stopEta();etaI=setInterval(()=>{if(etaSec>0){etaSec--;const m=Math.floor(etaSec/60),s=etaSec%60;const el=document.getElementById('eta-num');if(el)el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}else stopEta()},1000)}
-function stopEta(){if(etaI){clearInterval(etaI);etaI=null}}
-const REPLIES=["On HWY 1 now, moving well 🚗","About 10 mins from North Shore 📦","No problem at all!","Will be early — traffic is clear ✅","Roger that 👍","Almost at the exit ramp now!"];
-function renderChat(){const el=document.getElementById('chat-msgs');el.innerHTML=CHAT.map(m=>`<div class="msg ${m.f==='u'?'mine':''}"> ${m.f!=='u'?'<div class="mav">MK</div>':''}<div><div class="mbub">${m.t}</div><div class="mtime">${m.ts}</div></div></div>`).join('');el.scrollTop=el.scrollHeight}
-function sendMsg(){const inp=document.getElementById('chat-inp'),t=inp.value.trim();if(!t)return;const now=new Date(),ts=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;CHAT.push({f:'u',t,ts});inp.value='';inp.style.height='auto';renderChat();setTimeout(()=>{CHAT.push({f:'m',t:REPLIES[Math.floor(Math.random()*REPLIES.length)],ts});renderChat()},1000+Math.random()*800)}
-
-/* ════════════════════════════════════════
-   UI HELPERS
-════════════════════════════════════════ */
-function selPill(el,key,val){el.closest('.pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));el.classList.add('on');if(key==='parcel-cap')ST.parcelCap=val;if(key==='flex')pFlex=val;if(key==='t-detour')ST.detour=val}
-function segSel(btn,stateKey,val){btn.closest('.seg').querySelectorAll('.seg-b').forEach(b=>b.classList.remove('on'));btn.classList.add('on');segState[stateKey]=val;if(stateKey==='p-recur')PS.recurring=(val==='weekly');if(stateKey==='t-recur')ST.recurring=(val==='weekly')}
-function toast(msg,d=3200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d)}
-
-/* ════════════════════════════════════════
-   BOOT
-════════════════════════════════════════ */
-(async function init(){
-  await bootAuth();
-  const ws=getWindowStatus();
-  const ind=document.getElementById('home-window-ind');
-  if(ind){ind.className='window-ind '+ws.cls;ind.innerHTML=`<div class="wi-dot ${ws.dotCls}"></div><span>${ws.label}</span>`}
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) showApp(session.user);
+  else showAuth();
 })();
+
+// ── SCREENS ────────────────────────────────────
+function showAuth() {
+  document.getElementById('screen-auth').classList.add('active');
+  document.getElementById('screen-app').classList.remove('active');
+}
+function showApp(user) {
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  const name = user?.user_metadata?.full_name
+    || user?.user_metadata?.name
+    || user?.email?.split('@')[0]
+    || 'there';
+  document.getElementById('hero-name').textContent = `Hey, ${name} 👋`;
+  updateWindowStatus();
+  setInterval(updateWindowStatus, 60000);
+}
+
+// ── ALERT HELPERS ──────────────────────────────
+function showAlert(type, msg) {
+  ['error','success','info'].forEach(t => {
+    const el = document.getElementById('alert-' + t);
+    el.textContent = '';
+    el.classList.remove('show');
+  });
+  if (type && msg) {
+    const el = document.getElementById('alert-' + type);
+    el.textContent = msg;
+    el.classList.add('show');
+    if (type !== 'error') setTimeout(() => el.classList.remove('show'), 6000);
+  }
+}
+function clearAlerts() { showAlert(null, null); }
+
+// ── TAB SWITCH ─────────────────────────────────
+let currentTab = 'signin';
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('row-password').style.display = tab === 'signin' ? 'flex' : 'none';
+  const btnEmail = document.getElementById('btn-email');
+  btnEmail.textContent = tab === 'signin' ? 'Continue with Email' : 'Send Magic Link →';
+  document.getElementById('otp-section').classList.remove('show');
+  clearAlerts();
+}
+
+// ── GOOGLE AUTH ────────────────────────────────
+// Google OAuth — redirects to Google then back to couride.co
+// Requires: Supabase Dashboard → Auth → Providers → Google → Enable
+async function googleAuth() {
+  clearAlerts();
+  const btn = document.getElementById('btn-google');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:0.5rem"><svg width="16" height="16" viewBox="0 0 16 16" style="animation:spin 0.8s linear infinite"><circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none"/><path d="M8 2a6 6 0 0 1 6 6" stroke="#C8FF00" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Connecting to Google…</span>';
+  try {
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/',
+        queryParams: { access_type: 'offline', prompt: 'select_account' }
+      }
+    });
+    if (error) {
+      if (error.message.toLowerCase().includes('provider') || error.message.toLowerCase().includes('not enabled') || error.status === 400) {
+        showAlert('error', '⚠️ Google login setup required. Use Email or Phone login for now — Google is coming soon.');
+      } else {
+        showAlert('error', error.message);
+      }
+      btn.disabled = false;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.706c-.18-.54-.282-1.117-.282-1.706s.102-1.166.282-1.706V4.962H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg> Continue with Google';
+}
+
+// ── EMAIL AUTH ─────────────────────────────────
+async function emailAuth() {
+  clearAlerts();
+  const email = document.getElementById('in-email').value.trim();
+  const password = document.getElementById('in-password').value;
+  if (!email) { showAlert('error', 'Please enter your email address.'); return; }
+  const btn = document.getElementById('btn-email');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  try {
+    if (currentTab === 'signin') {
+      if (!password) { showAlert('error', 'Please enter your password.'); btn.disabled = false; btn.textContent = 'Continue with Email'; return; }
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message.includes('Invalid login')) showAlert('error', 'Wrong email or password. Try again or use magic link.');
+        else showAlert('error', error.message);
+      }
+    } else {
+      // signup = magic link
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin, shouldCreateUser: true }
+      });
+      if (error) showAlert('error', error.message);
+      else {
+        showAlert('success', '✅ Check your email! We sent a magic sign-in link.');
+        document.getElementById('otp-section').classList.add('show');
+      }
+    }
+  } catch (e) {
+    showAlert('error', 'Network error. Please try again.');
+  }
+  btn.disabled = false;
+  btn.textContent = currentTab === 'signin' ? 'Continue with Email' : 'Send Magic Link →';
+}
+
+async function verifyEmailOTP() {
+  clearAlerts();
+  const email = document.getElementById('in-email').value.trim();
+  const token = document.getElementById('in-otp').value.trim();
+  if (!token || token.length !== 6) { showAlert('error', 'Please enter the 6-digit code from your email.'); return; }
+  const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) showAlert('error', error.message);
+}
+
+// ── PHONE AUTH ─────────────────────────────────
+async function phoneAuth() {
+  clearAlerts();
+  const phone = document.getElementById('in-phone').value.trim();
+  if (!phone) { showAlert('error', 'Please enter your phone number.'); return; }
+  const btn = document.getElementById('btn-phone');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const { error } = await sb.auth.signInWithOtp({ phone });
+  btn.disabled = false; btn.textContent = 'Send Verification Code';
+  if (error) {
+    showAlert('error', 'SMS requires Twilio setup. Use email login instead. (' + error.message + ')');
+  } else {
+    document.getElementById('phone-otp-section').style.display = 'block';
+    showAlert('success', 'Code sent! Enter it below.');
+  }
+}
+
+async function verifyPhoneOTP() {
+  clearAlerts();
+  const phone = document.getElementById('in-phone').value.trim();
+  const token = document.getElementById('in-phone-otp').value.trim();
+  if (!token) { showAlert('error', 'Please enter the 6-digit code.'); return; }
+  const { error } = await sb.auth.verifyOtp({ phone, token, type: 'sms' });
+  if (error) showAlert('error', error.message);
+}
+
+// ── SIGN OUT ───────────────────────────────────
+async function signOut() {
+  await sb.auth.signOut();
+  // Close all panels
+  document.querySelectorAll('.panel-overlay').forEach(p => p.classList.remove('open'));
+  document.body.style.overflow = '';
+}
+
+// ── WINDOW STATUS ──────────────────────────────
+function updateWindowStatus() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const day = now.getDay();
+  const isWeekday = day >= 1 && day <= 5;
+  const hm = h * 60 + m;
+  const statusEl = document.getElementById('wc-status');
+  const nextEl = document.getElementById('wc-next');
+  const iconEl = document.getElementById('wc-icon');
+  const dotEl = document.getElementById('status-dot');
+
+  const setStatus = (txt, cls, next, icon, dotOff) => {
+    statusEl.textContent = txt; statusEl.className = 'wc-status ' + cls;
+    nextEl.textContent = next; iconEl.textContent = icon;
+    dotEl.className = 'status-dot' + (dotOff ? ' off' : '');
+  };
+
+  if (!isWeekday) { setStatus('Closed — Weekend','closed','Next window: Monday 6:30 AM','😴',true); return; }
+  if (hm >= 390 && hm < 510) setStatus('🟢 Open — Morning','open','Outbound to North Shore · Until 8:30 AM','🌅',false);
+  else if (hm >= 870 && hm < 1050) setStatus('🟢 Open — Afternoon','open','Return toward Surrey · Until 5:30 PM','🌆',false);
+  else if (hm < 390) setStatus('Opening soon','closed',`Morning window at 6:30 AM · ${Math.ceil((390-hm)/60)}h away`,'🌙',true);
+  else if (hm < 870) setStatus('Closed','closed',`Afternoon window at 2:30 PM · ${Math.ceil((870-hm)/60)}h away`,'⏳',true);
+  else setStatus('Closed','closed','Next window: tomorrow 6:30 AM','⏳',true);
+}
+
+// ── PANELS ─────────────────────────────────────
+function openPanel(id) {
+  const p = document.getElementById('panel-' + id);
+  if (!p) return;
+  p.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePanel(id) {
+  const p = document.getElementById('panel-' + id);
+  if (!p) return;
+  p.classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close on escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.panel-overlay.open').forEach(p => {
+      p.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  }
+});
+
+// ── FORM HELPERS ───────────────────────────────
+function selOpt(el, group) {
+  el.closest('.opt-grid').querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function selSpeed(id) {
+  ['flex','window','priority'].forEach(s => document.getElementById('speed-'+s).classList.remove('sel'));
+  document.getElementById('speed-'+id).classList.add('sel');
+}
+const counters = { seats: 1 };
+function adjCount(id, delta) {
+  counters[id] = Math.max(1, Math.min(6, (counters[id]||1) + delta));
+  document.getElementById('count-'+id).textContent = counters[id];
+}
+
+// Submit stubs
+function submitRide() {
+  const from = document.getElementById('ac-ride-from').value;
+  const to = document.getElementById('ac-ride-to').value;
+  if (!from || !to) { alert('Please enter your pickup and dropoff addresses.'); return; }
+  closePanel('ride');
+  setTimeout(() => alert('🔍 Searching corridor for available drivers…\n\nMatching engine coming in the next build. We'll notify you when a match is found.'), 200);
+}
+function submitParcel() {
+  const from = document.getElementById('ac-parcel-from').value;
+  const to = document.getElementById('ac-parcel-to').value;
+  if (!from || !to) { alert('Please enter pickup and delivery addresses.'); return; }
+  closePanel('parcel');
+  setTimeout(() => alert('📦 Parcel posted!\n\nRecipient details & payment flow coming in next build.'), 200);
+}
+function submitDriver() {
+  const from = document.getElementById('ac-drv-from').value;
+  const to = document.getElementById('ac-drv-to').value;
+  if (!from || !to) { alert('Please enter your commute start and end addresses.'); return; }
+  closePanel('driver');
+  setTimeout(() => alert('🗺️ Route registered!\n\nSchedule and vehicle setup coming in next build.'), 200);
+}
+
+// ── ADDRESS AUTOCOMPLETE ───────────────────────
+// Uses OpenStreetMap Nominatim — FREE, no API key needed
+// Bounded to BC/Metro Vancouver region for relevant results
+const AC_CACHE = {};
+let acTimers = {};
+
+async function acSearch(fieldId, query) {
+  const input = document.getElementById('ac-' + fieldId);
+  const dropdown = document.getElementById('acd-' + fieldId);
+  const clearBtn = document.getElementById('ac-clear-' + fieldId);
+
+  if (clearBtn) clearBtn.classList.toggle('show', query.length > 0);
+  if (query.length < 2) { acClose(fieldId); return; }
+
+  // Debounce 300ms
+  clearTimeout(acTimers[fieldId]);
+  acTimers[fieldId] = setTimeout(async () => {
+    // Show loading
+    dropdown.innerHTML = '<div class="ac-loading">Searching…</div>';
+    dropdown.classList.add('open');
+
+    const cacheKey = query.toLowerCase();
+    if (AC_CACHE[cacheKey]) { renderAC(fieldId, AC_CACHE[cacheKey]); return; }
+
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?`
+        + `q=${encodeURIComponent(query + ', BC, Canada')}`
+        + `&format=json&addressdetails=1&limit=6`
+        + `&countrycodes=ca`
+        + `&viewbox=-123.5,49.0,-121.5,50.0&bounded=0`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'Couride/1.0' } });
+      const data = await res.json();
+      AC_CACHE[cacheKey] = data;
+      renderAC(fieldId, data);
+    } catch (e) {
+      // Fallback to corridor stops if offline
+      showFallbackAC(fieldId, query);
+    }
+  }, 300);
+}
+
+function renderAC(fieldId, results) {
+  const dropdown = document.getElementById('acd-' + fieldId);
+  const inputVal = document.getElementById('ac-' + fieldId).value;
+
+  if (!results || results.length === 0) {
+    showFallbackAC(fieldId, inputVal);
+    return;
+  }
+
+  const items = results.slice(0, 5).map(r => {
+    const name = r.display_name.split(',')[0];
+    const secondary = r.display_name.split(',').slice(1, 3).join(',').trim();
+    const highlighted = hlText(name, inputVal);
+    return `<div class="ac-item" onclick="acSelect('${fieldId}', '${escJS(r.display_name)}')" >
+      <span class="ac-pin">📍</span>
+      <div>
+        <div class="ac-main">${highlighted}</div>
+        <div class="ac-sec">${escHTML(secondary)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  dropdown.innerHTML = items + '<div class="ac-powered">© OpenStreetMap contributors</div>';
+  dropdown.classList.add('open');
+}
+
+const CORRIDOR_STOPS = [
+  ['Surrey Central Station', 'Surrey, BC'],
+  ['Guildford Town Centre', 'Surrey, BC'],
+  ['Abbotsford Downtown', 'Abbotsford, BC'],
+  ['Langley City Centre', 'Langley, BC'],
+  ['North Vancouver City Centre', 'North Vancouver, BC'],
+  ['Lonsdale Quay', 'North Vancouver, BC'],
+  ['Park Royal Shopping Centre', 'West Vancouver, BC'],
+  ['Lynn Valley Centre', 'North Vancouver, BC'],
+  ['Burnaby HWY 1 Intercept', 'Burnaby, BC'],
+  ['Deep Cove', 'North Vancouver, BC'],
+];
+
+function showFallbackAC(fieldId, query) {
+  const dropdown = document.getElementById('acd-' + fieldId);
+  const q = query.toLowerCase();
+  const matches = CORRIDOR_STOPS.filter(([name]) => name.toLowerCase().includes(q));
+  if (matches.length === 0) { dropdown.innerHTML = '<div class="ac-loading">No results — try a corridor stop below</div>'; return; }
+  dropdown.innerHTML = matches.slice(0,5).map(([name, region]) =>
+    `<div class="ac-item" onclick="acSelect('${fieldId}', '${name}, ${region}')">
+      <span class="ac-pin">📍</span>
+      <div><div class="ac-main">${hlText(name, query)}</div><div class="ac-sec">${region}</div></div>
+    </div>`
+  ).join('') + '<div class="ac-powered">Corridor stops</div>';
+  dropdown.classList.add('open');
+}
+
+function acSelect(fieldId, value) {
+  const input = document.getElementById('ac-' + fieldId);
+  input.value = value;
+  acClose(fieldId);
+  const clearBtn = document.getElementById('ac-clear-' + fieldId);
+  if (clearBtn) clearBtn.classList.add('show');
+  // Mark matching chip
+  const wrap = input.closest('.fg');
+  if (wrap) {
+    wrap.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('sel', value.toLowerCase().includes(c.textContent.toLowerCase().trim()));
+    });
+  }
+}
+
+function acSet(fieldId, value) {
+  acSelect(fieldId, value);
+}
+
+function acClear(fieldId) {
+  const input = document.getElementById('ac-' + fieldId);
+  input.value = '';
+  acClose(fieldId);
+  const clearBtn = document.getElementById('ac-clear-' + fieldId);
+  if (clearBtn) clearBtn.classList.remove('show');
+  const wrap = input.closest('.fg');
+  if (wrap) wrap.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+  input.focus();
+}
+
+function acClose(fieldId) {
+  const d = document.getElementById('acd-' + fieldId);
+  if (d) { d.classList.remove('open'); d.innerHTML = ''; }
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ac-wrap')) {
+    document.querySelectorAll('.ac-dropdown').forEach(d => {
+      d.classList.remove('open');
+      d.innerHTML = '';
+    });
+  }
+});
+
+// Helper: highlight matched text
+function hlText(text, query) {
+  if (!query) return escHTML(text);
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return escHTML(text);
+  return escHTML(text.slice(0, idx))
+    + '<b>' + escHTML(text.slice(idx, idx + query.length)) + '</b>'
+    + escHTML(text.slice(idx + query.length));
+}
+function escHTML(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escJS(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
 </script>
 </body>
 </html>
