@@ -1018,7 +1018,7 @@ function submitRide() {
   const to = document.getElementById('ac-ride-to').value;
   if (!from || !to) { alert('Please enter your pickup and dropoff addresses.'); return; }
   closePanel('ride');
-  setTimeout(() => alert('🔍 Searching corridor for available drivers…\n\nMatching engine coming in the next build. We'll notify you when a match is found.'), 200);
+  setTimeout(() => alert("🔍 Searching corridor for available drivers…\n\nMatching engine coming in the next build. We'll notify you when a match is found."), 200);
 }
 function submitParcel() {
   const from = document.getElementById('ac-parcel-from').value;
