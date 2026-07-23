@@ -1,238 +1,79 @@
-# Couride — Full Project Documentation
-**Version:** 5.0 · **Date:** April 2026 · **Status:** Pilot Active
+# TransLink Digital Twin — Metro Vancouver
 
----
+A real-time 3D digital twin of Metro Vancouver's TransLink network. Live bus, SkyTrain, and SeaBus positions are rendered on a hardware-accelerated WebGL/WebGPU-class map, fused with corridor speed data and historical ridership baselines to power predictive delay forecasts, crowd density visualization, and AI-generated disruption summaries.
 
-## What Is Couride?
-Crowd-routed delivery and ride-sharing for Metro Vancouver.
-Not Uber. Not a courier. A **coordination layer on top of trips already happening.**
-People already driving Surrey ↔ North Shore carry packages and passengers along the way.
+Built with **Next.js 14 (App Router)**, **deck.gl**, and **MapLibre GL**. Runs fully-featured with zero configuration using deterministic mock data generators, and upgrades to live TransLink/Anthropic data the moment API keys are provided.
 
-**Core positioning:** "Someone's already going your way."
+## Features
 
----
+1. **3D Digital Twin Map** — deck.gl `IconLayer` / `PathLayer` / `ColumnLayer` over a dark MapLibre GL basemap, with elevated SkyTrain guideway rendering, SeaBus water vectors, and 60fps client-side interpolation between GTFS-RT position pings.
+2. **Real-Time Crowd Density Heatmaps** — vehicle occupancy estimated from GTFS-RT occupancy status (live) or a time-of-day/TSPR-informed model (mock), rendered as color-coded density halos.
+3. **Predictive Cascading Delay Engine** (`lib/delayPredictor.ts`) — cross-references RTDS corridor speed drops against live vehicle positions to forecast arrival delays 15–30 minutes ahead of official GTFS-RT delay fields.
+4. **Multimodal Corridor Fusion** — visual transfer vectors between key hubs (Waterfront, Commercial-Broadway, Lougheed Town Centre, Metrotown, Lonsdale Quay, Coquitlam Central) across Bus/SkyTrain/SeaBus.
+5. **Generative AI Disruption Summarizer** (`/api/ai/summarize-alerts`) — turns cryptic GTFS-RT service alert text into plain-English rider guidance via the Anthropic Claude API, with a deterministic rule-based fallback when no API key is set.
+6. **Corridor Bottleneck Diagnostics** — flags corridors (Broadway, 41st Ave, Hastings, Highway 1, Kingsway, Marine Drive) where speeds drop below 30–55% of free-flow.
+
+## Tech Stack
+
+- **Framework:** Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn-style UI primitives, Framer Motion, Lucide Icons, Recharts
+- **Spatial rendering:** `@deck.gl/core`, `@deck.gl/layers`, `@deck.gl/geo-layers`, `@deck.gl/react`, `@deck.gl/mapbox`, `maplibre-gl`
+- **Data ingestion:** `gtfs-realtime-bindings`, `protobufjs`
+- **AI:** `@anthropic-ai/sdk`
 
 ## Project Structure
 
 ```
-couride/
-├── couride-app/
-│   ├── index.html          ← Main web app (the thing at couride.co)
-│   └── vercel.json         ← Routing config + security headers
-│
-├── smoke-test/
-│   ├── send.html           ← Sender waitlist landing page (couride.co/send)
-│   ├── drive.html          ← Driver waitlist landing page (couride.co/drive)
-│   ├── ride.html           ← Passenger waitlist landing page (couride.co/ride)
-│   └── admin.html          ← Analytics dashboard (couride.co/admin)
-│
-├── docs/
-│   ├── README.md           ← This file
-│   └── CLAUDE.md           ← Claude Code briefing (drop in repo root)
-│
-└── deploy.sh               ← One-command deploy script
+app/
+  page.tsx                                 Main dashboard UI
+  api/translink/gtfs-rt/route.ts           Live vehicle positions + alerts (protobuf → JSON)
+  api/translink/rtds/route.ts              Corridor speed + bottleneck data
+  api/translink/tspr/route.ts              Historical ridership baselines
+  api/ai/summarize-alerts/route.ts         AI disruption summarizer
+components/
+  map/TransitMap3D.tsx                     deck.gl + MapLibre 3D canvas
+  ui/Header.tsx, ControlPanel.tsx, DisruptionBanner.tsx, AnalyticsDrawer.tsx, NodeDrawer.tsx
+lib/
+  translink.ts                             API client, caching, mock data generators
+  delayPredictor.ts                        Cascading delay engine + bottleneck detection
+  aiSummarizer.ts                          Claude-powered / rule-based alert summarizer
+  metroVancouverData.ts                    Reference geometry (routes, corridors, hubs)
 ```
 
----
+## Getting Started
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Vanilla HTML/CSS/JS (single-file SPA) |
-| Hosting | Vercel (project: paperplane-live-site → couride.co) |
-| Database | Supabase (PostgreSQL + RLS) |
-| Auth | Supabase Auth (email, magic link, phone OTP, Google OAuth) |
-| Realtime | Supabase Realtime (messages, matches, tracking) |
-| CDN | jsDelivr (Supabase JS client) |
-| Fonts | Google Fonts (Syne + DM Sans) |
-
----
-
-## Deployment
-
-### The Vercel Project
-- **Vercel project name:** `paperplane-live-site` (old name — same project, just renamed internally)
-- **Production domain:** `couride.co`
-- **GitHub user:** `Aashwinrai2904`
-- **Team:** Couride (Pro plan)
-
-### How to Deploy
 ```bash
-# Option 1: Push to GitHub (auto-deploys via Vercel git integration)
-git add .
-git commit -m "update"
-git push
-
-# Option 2: Use deploy.sh (requires Vercel CLI + login)
-bash deploy.sh
-
-# Option 3: Vercel CLI manually
-vercel deploy --prod
+npm install
+npm run dev
 ```
 
-### What Goes Where
-All files in `couride-app/` and `smoke-test/` go into the **root** of your repo.
-`vercel.json` handles the routing so `/send` serves `send.html`, etc.
+Open [http://localhost:3000](http://localhost:3000). The app runs entirely on realistic mock data out of the box — no API keys required.
 
----
+### Enabling live data
 
-## Supabase Configuration
-- **Project ID:** `frwuvmjxjmnhucrkjwvn`
-- **Region:** us-east-1
-- **URL:** `https://frwuvmjxjmnhucrkjwvn.supabase.co`
-- **Anon Key:** (in all HTML files — safe to expose, protected by RLS)
+Copy `.env.example` to `.env.local` and fill in:
 
-### Database Tables
+- `TRANSLINK_API_KEY` — from the [TransLink Developer Portal](https://developer.translink.ca), enables live GTFS-RT vehicle positions and service alerts.
+- `TRANSLINK_RTDS_URL` / `TRANSLINK_TSPR_URL` — optional, if you have direct access to TransLink's RTDS/TSPR datasets.
+- `ANTHROPIC_API_KEY` — enables Claude-powered plain-English disruption summaries (falls back to a rule-based summarizer otherwise).
 
-| Table | Purpose | RLS |
-|-------|---------|-----|
-| `profiles` | User profiles (auto-created on signup) | Auth users own their row |
-| `traveler_routes` | Driver registered commute routes | Drivers own their routes |
-| `ride_requests` | Passenger ride requests | Users own their requests |
-| `sender_requests` | Parcel send requests | Users own their requests |
-| `matches` | Driver ↔ requester matches | Participants only |
-| `bookings` | Confirmed bookings + payment | Participants only |
-| `messages` | In-match chat | Match participants only |
-| `tracking_updates` | Live GPS from driver | Match participants only |
-| `qr_tokens` | Pickup/dropoff verification codes | Match participants only |
-| `smoke_test_signups` | Waitlist signups from smoke test | Public insert, auth read |
-| `smoke_test_pageviews` | Page view tracking | Public insert, auth read |
-| `rate_limits` | API rate limiting | Internal |
+Every data-fetching function in `lib/translink.ts` fails soft: if a live request errors or a key is missing, it transparently falls back to the mock generator so the app never breaks in production.
 
-### Supabase Functions (SQL)
-- `find_corridor_matches()` — matching engine, returns scored drivers for a request
-- `calculate_corridor_price()` — pricing engine, returns Couride vs FedEx vs Purolator
-- `generate_qr_tokens()` — creates pickup/dropoff QR codes for a match
-- `verify_qr_token()` — validates a scanned QR code, updates match status
-- `handle_new_user()` — trigger: auto-creates profile on auth signup
+## Deploying to Vercel
 
-### Edge Functions (Deno)
-- `smoke-test-notify` — logs new waitlist signups (console + future email)
-
----
-
-## Design System
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--bg` | `#0d0f1a` | Page background (NEVER override) |
-| `--surface` | `#13172b` | Cards, panels |
-| `--surface2` | `#1a1f38` | Inputs, nested elements |
-| `--border` | `#1f2440` | Dividers |
-| `--accent` | `#C8FF00` | Primary CTA, highlights |
-| `--orange` | `#FF6B35` | Driver segment |
-| `--purple` | `#7B61FF` | Passenger segment |
-| `--text` | `#f0f0f0` | Primary text |
-| `--text2` | `#9aa3c8` | Secondary text |
-| `--muted` | `#505880` | Placeholder, labels |
-| Font Display | Syne 700/800 | Headings, buttons |
-| Font Body | DM Sans 300/400/500 | Body text, inputs |
-
-**Rule:** `color-scheme: dark` + `<meta name="color-scheme" content="dark">` on EVERY page.
-
----
-
-## Auth Setup Status
-
-| Provider | Status | How to Fix |
-|----------|--------|-----------|
-| Email/Password | ✅ Working | — |
-| Magic Link (email OTP) | ✅ Working | — |
-| Phone/SMS OTP | ⚠️ Needs Twilio | Supabase → Auth → Providers → Phone → Add Twilio creds |
-| Google OAuth | ⚠️ Needs setup | See below |
-| Apple | ❌ Remove | Requires $99/yr Apple Developer account |
-| Facebook/Twitter | ❌ Remove | Not needed for pilot |
-
-### Fix Google OAuth (5 min)
-1. Go to: https://console.cloud.google.com
-2. APIs & Services → Credentials → Create OAuth 2.0 Client ID (Web application)
-3. Add Authorized Redirect URI: `https://frwuvmjxjmnhucrkjwvn.supabase.co/auth/v1/callback`
-4. Copy Client ID and Client Secret
-5. Go to: https://supabase.com/dashboard/project/frwuvmjxjmnhucrkjwvn/auth/providers
-6. Google → Enable → Paste credentials → Save
-
----
-
-## Smoke Test Pages
-
-These are **separate from the main app.** Different purpose, different audience.
-
-| Page | Segment | Ad targeting | Pass threshold |
-|------|---------|-------------|---------------|
-| `/send` | Package senders | Meta: Metro Van residents, online shoppers | >3% signup CVR |
-| `/drive` | Drivers/commuters | Meta/FB: people who follow DoorDash driver pages | >3% signup CVR |
-| `/ride` | Passengers | Meta: Metro Van, 22-45, ride-share interest | >3% signup CVR |
-| `/admin` | You only | — | Requires Supabase auth login |
-
-**UTM tracking:** Append `?utm_source=meta_ig` (or `fb_group`, `meta_fb`) to ad URLs.
-The admin dashboard breaks down signups by source automatically.
-
-**Budget:** ~$250 CAD total for 2 weeks = enough to reach decision point.
-
----
-
-## Pilot Corridor
-
-- **Route:** Surrey / Abbotsford ↔ North Shore via HWY 1 (~80km)
-- **Schedule:** Weekdays only
-- **Morning window:** 6:30–8:30 AM (outbound toward North Shore)
-- **Afternoon window:** 2:30–5:30 PM (return toward Surrey/Abbotsford)
-- **Stops:** Surrey Central, Guildford, Abbotsford, Langley, Burnaby HWY1 intercept, North Van, Lonsdale, Park Royal, Lynn Valley
-
----
-
-## Known Bugs Fixed
-
-| Bug | Fix Applied |
-|-----|------------|
-| White background in light mode | `color-scheme: dark` meta + CSS override |
-| Google OAuth "nothing happens" | Added loading state + proper error message |
-| Apple/FB/Twitter OAuth error | Removed from UI |
-| RLS violations on 9 tables | Full policy set applied via migration |
-| `handle_new_user` security hole | Revoked anon execute, fixed search_path |
-| No autocomplete on address fields | Nominatim OSM + corridor stops fallback |
-| Google Maps warning in console | Was from OLD live site, not new files |
-
----
-
-## What's NOT Built Yet (Next Sprint)
-
-- [ ] Real matching engine call from UI (function exists in DB, not wired to buttons yet)
-- [ ] Stripe Connect payments
-- [ ] Real SMS notifications (Twilio)
-- [ ] Driver verification flow
-- [ ] Push notifications
-- [ ] CarryOn — React Native version
-
----
-
-## Claude Code Setup
 ```bash
-# Install Claude Code
-npm install -g @anthropic-ai/claude-code
-
-# In your repo root (after dropping CLAUDE.md here)
-cd your-couride-repo
-claude
-
-# Claude Code will read CLAUDE.md and know everything about Couride
-# Then you can say things like:
-# "wire the submitRide() function to actually query Supabase"
-# "add Stripe payment to the booking flow"
-# "build the driver earnings dashboard"
+npm install -g vercel   # if you don't already have the CLI
+vercel login
+vercel --prod
 ```
 
----
+Or connect the GitHub repository directly in the [Vercel dashboard](https://vercel.com/new) — `vercel.json` and `next.config.js` are already configured with the correct headers, CORS, and `transpilePackages` for deck.gl's ESM packages. All API routes are serverless functions with `Cache-Control` tuned per data source (`s-maxage=10` for live vehicle positions, `s-maxage=30` for corridor speeds/alerts, `s-maxage=3600` for ridership baselines).
 
-## Vercel Team Access for Claude
-The Vercel MCP currently connects to your personal account.
-Your Couride project lives in the **Couride team** (Pro plan).
-To give Claude MCP access to deploy:
-1. Go to vercel.com → Team Settings → Tokens
-2. Create a token with Couride team scope
-3. Update the Vercel MCP connection in Claude settings with the new token
+Set the same environment variables from `.env.example` in your Vercel project's **Settings → Environment Variables**.
 
----
+## Build Validation
 
-*Last updated: April 2026 · Built by Aashwin Rai*
+```bash
+npm run typecheck   # TypeScript, zero errors
+npm run lint         # ESLint, zero errors
+npm run build         # Production build
+```
