@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TransLink Digital Twin | Metro Vancouver",
+  title: "TransLink GIS | Metro Vancouver",
   description:
-    "A real-time 3D digital twin of Metro Vancouver's TransLink network — live vehicle positions, crowd density, predictive delays, and AI-powered disruption summaries.",
+    "TransLink GIS — a real-time 3D geographic information system for Metro Vancouver's transit network — live vehicle positions, crowd density, predictive delays, and AI-powered disruption summaries.",
 };
 
 export const viewport: Viewport = {

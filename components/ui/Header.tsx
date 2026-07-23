@@ -14,7 +14,7 @@ export default function Header({ live, lastUpdated }: HeaderProps) {
       <Satellite className="h-5 w-5 text-primary" />
       <div className="leading-tight">
         <h1 className="text-sm font-semibold tracking-wide text-foreground">
-          TransLink Digital Twin
+          TransLink GIS
         </h1>
         <p className="text-[11px] text-muted-foreground">Metro Vancouver · Live Transit Network</p>
       </div>

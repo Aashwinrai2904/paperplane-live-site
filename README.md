@@ -1,12 +1,12 @@
-# TransLink Digital Twin — Metro Vancouver
+# TransLink GIS — Metro Vancouver
 
-A real-time 3D digital twin of Metro Vancouver's TransLink network. Live bus, SkyTrain, and SeaBus positions are rendered on a hardware-accelerated WebGL/WebGPU-class map, fused with corridor speed data and historical ridership baselines to power predictive delay forecasts, crowd density visualization, and AI-generated disruption summaries.
+A real-time 3D geographic information system for Metro Vancouver's TransLink network. Live bus, SkyTrain, and SeaBus positions are rendered on a hardware-accelerated WebGL/WebGPU-class map, fused with corridor speed data and historical ridership baselines to power predictive delay forecasts, crowd density visualization, and AI-generated disruption summaries.
 
 Built with **Next.js 14 (App Router)**, **deck.gl**, and **MapLibre GL**. Runs fully-featured with zero configuration using deterministic mock data generators, and upgrades to live TransLink/Anthropic data the moment API keys are provided.
 
 ## Features
 
-1. **3D Digital Twin Map** — deck.gl `IconLayer` / `PathLayer` / `ColumnLayer` over a dark MapLibre GL basemap, with elevated SkyTrain guideway rendering, SeaBus water vectors, and 60fps client-side interpolation between GTFS-RT position pings.
+1. **3D GIS Map** — deck.gl `IconLayer` / `PathLayer` / `ColumnLayer` over a dark MapLibre GL basemap, with elevated SkyTrain guideway rendering, SeaBus water vectors, and 60fps client-side interpolation between GTFS-RT position pings.
 2. **Real-Time Crowd Density Heatmaps** — vehicle occupancy estimated from GTFS-RT occupancy status (live) or a time-of-day/TSPR-informed model (mock), rendered as color-coded density halos.
 3. **Predictive Cascading Delay Engine** (`lib/delayPredictor.ts`) — cross-references RTDS corridor speed drops against live vehicle positions to forecast arrival delays 15–30 minutes ahead of official GTFS-RT delay fields.
 4. **Multimodal Corridor Fusion** — visual transfer vectors between key hubs (Waterfront, Commercial-Broadway, Lougheed Town Centre, Metrotown, Lonsdale Quay, Coquitlam Central) across Bus/SkyTrain/SeaBus.

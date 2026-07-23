@@ -246,7 +246,7 @@ function MapLoadingOverlay() {
   return (
     <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Booting the digital twin…</p>
+      <p className="text-sm text-muted-foreground">Booting TransLink GIS…</p>
     </div>
   );
 }
