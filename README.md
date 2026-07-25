@@ -13,6 +13,22 @@ Built with **Next.js 14 (App Router)**, **deck.gl**, and **MapLibre GL**. Runs f
 5. **Generative AI Disruption Summarizer** (`/api/ai/summarize-alerts`) — turns cryptic GTFS-RT service alert text into plain-English rider guidance via the Anthropic Claude API, with a deterministic rule-based fallback when no API key is set.
 6. **Corridor Bottleneck Diagnostics** — flags corridors (Broadway, 41st Ave, Hastings, Highway 1, Kingsway, Marine Drive) where speeds drop below 30–55% of free-flow.
 
+### GIS toolkit (`components/gis/`)
+
+Modeled after TransLink's public ArcGIS System Map application:
+
+- **Layers** — per-layer visibility toggles for Stations, Bus Exchanges, Stops, Bike Parkades, Rapid Transit Lines, all Lines, and Other Transportation (ferries/airport/BC Transit/depots).
+- **Data table** — a bottom-docked attribute table per layer with sortable/hideable columns, row selection, **Set Filter** (multi-clause builder), **Calculate Statistics** (count/sum/min/max/average/standard deviation), and **Export** to JSON, CSV, GeoJSON, and KML (Shapefile/FGDB are shown as desktop-GIS-only, since they require binary/geodatabase writers out of scope for a browser export).
+- **Legend** and **About** modals, and a **Find My Location** geolocation control with a live user-location marker.
+
+### Live 3D tracking (`components/gis/`, inspired by Mini Tokyo 3D)
+
+- **Camera tracking modes** (`lib/cameraTracking.ts`) — Position only, Back, Top-back, Front, Top-front, Helicopter, Drone, and Bird, continuously steering the MapLibre camera relative to a followed vehicle's interpolated position and heading.
+- **Vehicle inspector panel** — line, vehicle number, destination, previous/next stop with ETAs, delay status, a scrollable stop schedule, and a **Share this vehicle** link (`?vehicle=<id>`, copied to clipboard).
+- **Environmental overlays** — live precipitation radar from the free [RainViewer](https://www.rainviewer.com/api.html) public API (no key needed), an Events layer sourced from active service alerts, opt-in Live Camera markers (honestly labeled as unavailable until `NEXT_PUBLIC_TRAFFIC_CAMERA_URL_TEMPLATE` is configured), and a feed-status readout showing which data sources are live vs. simulated.
+
+This app is an independent, unofficial project and is not affiliated with or endorsed by TransLink.
+
 ## Tech Stack
 
 - **Framework:** Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn-style UI primitives, Framer Motion, Lucide Icons, Recharts
@@ -32,11 +48,17 @@ app/
 components/
   map/TransitMap3D.tsx                     deck.gl + MapLibre 3D canvas
   ui/Header.tsx, ControlPanel.tsx, DisruptionBanner.tsx, AnalyticsDrawer.tsx, NodeDrawer.tsx
+  gis/GisToolbar.tsx, LayersModal.tsx, DataTablePanel.tsx, FilterModal.tsx, StatisticsModal.tsx,
+      LegendModal.tsx, AboutModal.tsx, GeolocateControl.tsx, CameraTrackingPanel.tsx,
+      VehicleInspectorPanel.tsx, OverlayLayersMenu.tsx, LiveCameraModal.tsx
 lib/
   translink.ts                             API client, caching, mock data generators
   delayPredictor.ts                        Cascading delay engine + bottleneck detection
   aiSummarizer.ts                          Claude-powered / rule-based alert summarizer
   metroVancouverData.ts                    Reference geometry (routes, corridors, hubs)
+  gisData.ts, gisFilter.ts, gisExport.ts    GIS reference datasets, filtering, and export
+  cameraTracking.ts, vehicleSchedule.ts     3D camera modes and stop-schedule estimation
+  rainviewer.ts                            Free public precipitation radar tile fetcher
 ```
 
 ## Getting Started
@@ -55,6 +77,7 @@ Copy `.env.example` to `.env.local` and fill in:
 - `TRANSLINK_API_KEY` — from the [TransLink Developer Portal](https://developer.translink.ca), enables live GTFS-RT vehicle positions and service alerts.
 - `TRANSLINK_RTDS_URL` / `TRANSLINK_TSPR_URL` — optional, if you have direct access to TransLink's RTDS/TSPR datasets.
 - `ANTHROPIC_API_KEY` — enables Claude-powered plain-English disruption summaries (falls back to a rule-based summarizer otherwise).
+- `NEXT_PUBLIC_TRAFFIC_CAMERA_URL_TEMPLATE` — optional, points the Live Cameras overlay at a camera image provider (must contain an `{id}` placeholder). Left unset, that layer shows an honest "unavailable" placeholder instead of a fake feed.
 
 Every data-fetching function in `lib/translink.ts` fails soft: if a live request errors or a key is missing, it transparently falls back to the mock generator so the app never breaks in production.
 

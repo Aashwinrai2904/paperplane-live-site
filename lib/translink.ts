@@ -228,6 +228,8 @@ export function generateMockVehiclePositions(now = Date.now()): VehiclePosition[
         occupancyRatio: occupancy,
         crowdLevel: ratioToCrowdLevel(occupancy),
         scheduledArrivalOffsetSec: Math.round((rand() - 0.5) * 90),
+        pathProgress: loopedFraction(t),
+        pathDirection: direction as 1 | -1,
       });
     }
   }
@@ -255,6 +257,8 @@ export function generateMockVehiclePositions(now = Date.now()): VehiclePosition[
         occupancyRatio: occupancy,
         crowdLevel: ratioToCrowdLevel(occupancy),
         scheduledArrivalOffsetSec: Math.round((rand() - 0.5) * 60),
+        pathProgress: loopedFraction(t),
+        pathDirection: direction as 1 | -1,
       });
     }
   }
@@ -291,6 +295,8 @@ export function generateMockVehiclePositions(now = Date.now()): VehiclePosition[
         occupancyRatio: occupancy,
         crowdLevel: ratioToCrowdLevel(occupancy),
         scheduledArrivalOffsetSec: delaySec,
+        pathProgress: loopedFraction(t),
+        pathDirection: direction as 1 | -1,
       });
     }
   }
@@ -332,13 +338,22 @@ export function generateMockTsprStats(): TsprStopStat[] {
   });
 }
 
-const MOCK_ALERT_TEMPLATES: { effect: string; header: string; body: string; severity: ServiceAlert["severity"] }[] = [
+const MOCK_ALERT_TEMPLATES: {
+  effect: string;
+  header: string;
+  body: string;
+  severity: ServiceAlert["severity"];
+  lat: number;
+  lon: number;
+}[] = [
   {
     effect: "DETOUR",
     header: "Route 099 detour via Broadway",
     body:
       "Due to a collision investigation at Broadway & Commercial, buses on the 099 are detoured via 12th Ave between Commercial and Kingsway until further notice. Expect delays of 10-15 minutes.",
     severity: "warning",
+    lat: 49.2707,
+    lon: -123.0754,
   },
   {
     effect: "SIGNIFICANT_DELAYS",
@@ -346,6 +361,8 @@ const MOCK_ALERT_TEMPLATES: { effect: string; header: string; body: string; seve
     body:
       "Expo Line is experiencing residual delays of up to 8 minutes eastbound between Waterfront and Metrotown due to an earlier mechanical issue at Main St-Science World.",
     severity: "warning",
+    lat: 49.2721,
+    lon: -123.0844,
   },
   {
     effect: "REDUCED_SERVICE",
@@ -353,6 +370,8 @@ const MOCK_ALERT_TEMPLATES: { effect: string; header: string; body: string; seve
     body:
       "One vessel is out of service for scheduled maintenance. SeaBus is running on a reduced 30-minute frequency between Waterfront and Lonsdale Quay.",
     severity: "info",
+    lat: 49.2856,
+    lon: -123.1113,
   },
   {
     effect: "STOP_MOVED",
@@ -360,6 +379,8 @@ const MOCK_ALERT_TEMPLATES: { effect: string; header: string; body: string; seve
     body:
       "The eastbound stop at Hastings & Nanaimo is temporarily relocated one block east due to construction. Route 095 impacted.",
     severity: "info",
+    lat: 49.2812,
+    lon: -123.0389,
   },
 ];
 
@@ -372,11 +393,17 @@ export function generateMockAlerts(now = Date.now()): ServiceAlert[] {
     severity: tpl.severity,
     effect: tpl.effect,
     createdAt: now - i * 6 * 60 * 1000,
+    lat: tpl.lat,
+    lon: tpl.lon,
   }));
 }
 
 function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
+}
+
+function loopedFraction(t: number): number {
+  return ((t % 1) + 1) % 1;
 }
 
 // ---------------------------------------------------------------------------

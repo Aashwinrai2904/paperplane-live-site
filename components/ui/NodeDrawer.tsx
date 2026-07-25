@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Bus, TrainFront, Ship, MapPin, Gauge, Clock, Users } from "lucide-react";
+import { Bus, TrainFront, Ship, MapPin, Gauge, Clock, Users, Video } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +10,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   CorridorSpeedReading,
   DelayPrediction,
@@ -26,6 +27,7 @@ interface NodeDrawerProps {
   prediction?: DelayPrediction;
   hubStat?: TsprStopStat;
   onClose: () => void;
+  onTrackVehicle?: (vehicle: VehiclePosition) => void;
 }
 
 const MODE_ICON: Record<TransitMode, typeof Bus> = {
@@ -43,13 +45,21 @@ export default function NodeDrawer({
   prediction,
   hubStat,
   onClose,
+  onTrackVehicle,
 }: NodeDrawerProps) {
   const open = Boolean(vehicle || hub);
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent>
-        {vehicle && <VehicleDetails vehicle={vehicle} corridor={corridor} prediction={prediction} />}
+        {vehicle && (
+          <VehicleDetails
+            vehicle={vehicle}
+            corridor={corridor}
+            prediction={prediction}
+            onTrackVehicle={onTrackVehicle}
+          />
+        )}
         {hub && <HubDetails hub={hub} stat={hubStat} />}
       </SheetContent>
     </Sheet>
@@ -60,10 +70,12 @@ function VehicleDetails({
   vehicle,
   corridor,
   prediction,
+  onTrackVehicle,
 }: {
   vehicle: VehiclePosition;
   corridor?: CorridorSpeedReading;
   prediction?: DelayPrediction;
+  onTrackVehicle?: (vehicle: VehiclePosition) => void;
 }) {
   const Icon = MODE_ICON[vehicle.mode];
   const scheduledOffsetMin = vehicle.scheduledArrivalOffsetSec / 60;
@@ -80,6 +92,18 @@ function VehicleDetails({
       </SheetHeader>
 
       <div className="space-y-4 px-6 pb-6">
+        {onTrackVehicle && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full gap-2"
+            onClick={() => onTrackVehicle(vehicle)}
+          >
+            <Video className="h-3.5 w-3.5" />
+            Track this vehicle in 3D
+          </Button>
+        )}
+
         <Section icon={Clock} title="Arrival estimate">
           <div className="grid grid-cols-2 gap-3">
             <Metric

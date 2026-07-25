@@ -18,6 +18,8 @@ export interface VehiclePosition {
   occupancyRatio: number; // 0-1, derived crowd estimate
   crowdLevel: CrowdLevel;
   scheduledArrivalOffsetSec: number; // seconds ahead(-)/behind(+) schedule at last GTFS-RT ping
+  pathProgress?: number; // 0-1 normalized position along the route's forward path (mock data only)
+  pathDirection?: 1 | -1; // direction of travel through the path array (mock data only)
 }
 
 export type AlertSeverity = "info" | "warning" | "severe";
@@ -32,6 +34,8 @@ export interface ServiceAlert {
   createdAt: number;
   aiSummary?: string;
   aiDetourAdvice?: string;
+  lat?: number;
+  lon?: number;
 }
 
 export interface CorridorSpeedReading {
